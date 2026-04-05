@@ -8,6 +8,7 @@ import { MapPin, Users, Calendar } from "lucide-react";
 import RosterList from "@/components/sessions/RosterList";
 import JoinButton from "@/components/sessions/JoinButton";
 import CancelSessionButton from "@/components/sessions/CancelSessionButton";
+import ReviewSection from "@/components/reviews/ReviewSection";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +26,14 @@ export default async function SessionDetailPage({ params }: Params) {
 
   const { data: session } = await supabaseAdmin
     .from("sessions")
-    .select("*, clubs(id, slug, name)")
+    .select("*, clubs(id, slug, name), venues(id, name)")
     .eq("id", sessionId)
     .single();
 
   if (!session) notFound();
 
   const club = session.clubs as { id: string; slug: string; name: string } | null;
+  const venue = session.venues as { id: string; name: string } | null;
   if (!club) notFound();
 
   // Membership check
@@ -140,6 +142,17 @@ export default async function SessionDetailPage({ params }: Params) {
       <Separator />
 
       <RosterList sessionId={sessionId} isLeader={isLeader} />
+
+      {(session.status === "completed" || session.status === "auto_closed") && !isLeader && (
+        <>
+          <Separator />
+          <ReviewSection
+            sessionId={sessionId}
+            venueId={venue?.id ?? null}
+            venueName={venue?.name ?? null}
+          />
+        </>
+      )}
     </div>
   );
 }
