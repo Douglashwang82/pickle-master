@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ReputationDisplay from "@/components/reviews/ReputationDisplay";
 
 type Profile = {
   display_name: string;
@@ -15,6 +16,8 @@ type Profile = {
   skill_level?: string | null;
   bio?: string | null;
   contact_preference?: string;
+  reputation_score?: number | null;
+  review_count?: number;
 };
 
 export default function ProfilePage() {
@@ -39,6 +42,8 @@ export default function ProfilePage() {
             skill_level: data.profiles.skill_level,
             bio: data.profiles.bio,
             contact_preference: data.profiles.contact_preference,
+            reputation_score: data.profiles.reputation_score ?? null,
+            review_count: data.profiles.review_count ?? 0,
           });
         }
       }
@@ -88,6 +93,18 @@ export default function ProfilePage() {
           </p>
         )}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Reputation</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReputationDisplay
+            reputationScore={profile.reputation_score ?? null}
+            reviewCount={profile.review_count ?? 0}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
