@@ -268,6 +268,7 @@ export type Database = {
           amount_twd: number
           club_id: string
           created_at: string
+          debt_notified_at: string | null
           failure_code: string | null
           failure_message: string | null
           gateway: string
@@ -286,6 +287,7 @@ export type Database = {
           amount_twd: number
           club_id: string
           created_at?: string
+          debt_notified_at?: string | null
           failure_code?: string | null
           failure_message?: string | null
           gateway?: string
@@ -304,6 +306,7 @@ export type Database = {
           amount_twd?: number
           club_id?: string
           created_at?: string
+          debt_notified_at?: string | null
           failure_code?: string | null
           failure_message?: string | null
           gateway?: string

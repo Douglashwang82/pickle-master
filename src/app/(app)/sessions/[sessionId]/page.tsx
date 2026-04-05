@@ -9,6 +9,7 @@ import RosterList from "@/components/sessions/RosterList";
 import JoinButton from "@/components/sessions/JoinButton";
 import CancelSessionButton from "@/components/sessions/CancelSessionButton";
 import ReviewSection from "@/components/reviews/ReviewSection";
+import DebtProgressBar from "@/components/sessions/DebtProgressBar";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,26 @@ export default async function SessionDetailPage({ params }: Params) {
     .in("status", ["confirmed", "payment_pending"])
     .single();
 
+  // Fetch payment stats for leaders (debt progress bar)
+  let debtStats: { paidCount: number; totalCount: number; totalAmountTwd: number; paidAmountTwd: number } | null = null;
+  if (isLeader && session.fee_twd > 0) {
+    const { data: payments } = await supabaseAdmin
+      .from("payment_transactions")
+      .select("status, amount_twd")
+      .eq("session_id", sessionId)
+      .in("status", ["initiated", "succeeded"]);
+
+    if (payments && payments.length > 0) {
+      const paid = payments.filter((p) => p.status === "succeeded");
+      debtStats = {
+        totalCount: payments.length,
+        paidCount: paid.length,
+        totalAmountTwd: payments.reduce((s, p) => s + p.amount_twd, 0),
+        paidAmountTwd: paid.reduce((s, p) => s + p.amount_twd, 0),
+      };
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -114,6 +135,19 @@ export default async function SessionDetailPage({ params }: Params) {
         <div>
           <p className="text-sm text-muted-foreground whitespace-pre-line">{session.notes}</p>
         </div>
+      )}
+
+      {/* Payment collection progress bar (leader only) */}
+      {isLeader && debtStats && (
+        <>
+          <Separator />
+          <DebtProgressBar
+            paidCount={debtStats.paidCount}
+            totalCount={debtStats.totalCount}
+            totalAmountTwd={debtStats.totalAmountTwd}
+            paidAmountTwd={debtStats.paidAmountTwd}
+          />
+        </>
       )}
 
       <Separator />

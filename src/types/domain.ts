@@ -31,6 +31,19 @@ export type ApplicationWithProfile = MembershipApplication & {
   profile: Pick<Profile, "user_id" | "display_name" | "photo_url" | "bio" | "skill_level">;
 };
 
+// Debt info attached to a roster registration row
+export type DebtInfo = {
+  id: string;
+  status: "initiated" | "succeeded" | "failed" | "refund_pending" | "refunded";
+  amount_twd: number;
+  debt_notified_at: string | null;
+};
+
+export type RegistrationWithPayment = SessionRegistration & {
+  profile: Pick<Profile, "user_id" | "display_name" | "photo_url" | "skill_level">;
+  payment: DebtInfo | null;
+};
+
 export type MemberRole = "leader" | "member";
 export type MembershipStatus = "active" | "pending" | "removed";
 export type SessionStatus = "draft" | "published" | "full" | "cancelled" | "completed" | "auto_closed";

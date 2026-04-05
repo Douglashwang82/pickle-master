@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { RegistrationWithProfile } from "@/types/domain";
+import { Button } from "@/components/ui/button";
+import type { RegistrationWithPayment } from "@/types/domain";
 
 type Props = {
   sessionId: string;
@@ -13,13 +14,12 @@ type Props = {
 };
 
 export default function RosterList({ sessionId, isLeader }: Props) {
-  const [roster, setRoster] = useState<RegistrationWithProfile[]>([]);
+  const [roster, setRoster] = useState<RegistrationWithPayment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
 
-    // Initial fetch
     async function fetchRoster() {
       const res = await fetch(`/api/sessions/${sessionId}/roster`);
       if (res.ok) {
@@ -43,7 +43,6 @@ export default function RosterList({ sessionId, isLeader }: Props) {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          // Re-fetch on any change — simple and correct
           fetchRoster();
         }
       )
@@ -82,13 +81,53 @@ export default function RosterList({ sessionId, isLeader }: Props) {
 
       <div className="space-y-2">
         {confirmed.map((reg) => (
-          <RosterRow key={reg.id} reg={reg} isLeader={isLeader} sessionId={sessionId} />
+          <RosterRow
+            key={reg.id}
+            reg={reg}
+            isLeader={isLeader}
+            sessionId={sessionId}
+            onAction={() => {
+              fetch(`/api/sessions/${sessionId}/roster`)
+                .then((r) => r.json())
+                .then(setRoster);
+            }}
+          />
         ))}
-        {isLeader && pending.map((reg) => (
-          <RosterRow key={reg.id} reg={reg} isLeader={isLeader} sessionId={sessionId} isPending />
-        ))}
+        {isLeader &&
+          pending.map((reg) => (
+            <RosterRow
+              key={reg.id}
+              reg={reg}
+              isLeader={isLeader}
+              sessionId={sessionId}
+              isPending
+              onAction={() => {
+                fetch(`/api/sessions/${sessionId}/roster`)
+                  .then((r) => r.json())
+                  .then(setRoster);
+              }}
+            />
+          ))}
       </div>
     </div>
+  );
+}
+
+function PaymentBadge({ payment }: { payment: RegistrationWithPayment["payment"] }) {
+  if (!payment) return null;
+
+  if (payment.status === "succeeded") {
+    return (
+      <Badge variant="default" className="text-xs bg-green-600 hover:bg-green-600">
+        Paid
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
+      Unpaid · NT${payment.amount_twd}
+    </Badge>
   );
 }
 
@@ -97,14 +136,19 @@ function RosterRow({
   isLeader,
   sessionId,
   isPending,
+  onAction,
 }: {
-  reg: RegistrationWithProfile;
+  reg: RegistrationWithPayment;
   isLeader?: boolean;
   sessionId: string;
   isPending?: boolean;
+  onAction: () => void;
 }) {
   const [removing, setRemoving] = useState(false);
+  const [notifying, setNotifying] = useState(false);
+  const [markingPaid, setMarkingPaid] = useState(false);
   const profile = reg.profile;
+  const isUnpaid = reg.payment?.status === "initiated";
 
   async function handleRemove() {
     if (!confirm("Remove this participant and issue a refund?")) return;
@@ -115,6 +159,29 @@ function RosterRow({
       body: JSON.stringify({ userId: profile.user_id }),
     });
     setRemoving(false);
+    onAction();
+  }
+
+  async function handleNotify() {
+    setNotifying(true);
+    await fetch(`/api/sessions/${sessionId}/notify-payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: profile.user_id }),
+    });
+    setNotifying(false);
+    onAction();
+  }
+
+  async function handleMarkPaid() {
+    setMarkingPaid(true);
+    await fetch(`/api/sessions/${sessionId}/mark-debt-paid`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: profile.user_id }),
+    });
+    setMarkingPaid(false);
+    onAction();
   }
 
   return (
@@ -129,15 +196,43 @@ function RosterRow({
           <p className="text-xs text-muted-foreground capitalize">{profile.skill_level}</p>
         )}
       </div>
+
       {isPending && <Badge variant="outline" className="text-xs">Pending</Badge>}
+
+      {!isPending && <PaymentBadge payment={reg.payment} />}
+
       {isLeader && !isPending && (
-        <button
-          onClick={handleRemove}
-          disabled={removing}
-          className="text-xs text-destructive hover:underline ml-2"
-        >
-          {removing ? "Removing…" : "Remove"}
-        </button>
+        <div className="flex items-center gap-1 ml-1">
+          {isUnpaid && (
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs"
+                onClick={handleNotify}
+                disabled={notifying}
+              >
+                {notifying ? "Sending…" : "Notify"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                onClick={handleMarkPaid}
+                disabled={markingPaid}
+              >
+                {markingPaid ? "Saving…" : "Mark Paid"}
+              </Button>
+            </>
+          )}
+          <button
+            onClick={handleRemove}
+            disabled={removing}
+            className="text-xs text-destructive hover:underline ml-1"
+          >
+            {removing ? "Removing…" : "Remove"}
+          </button>
+        </div>
       )}
     </div>
   );
