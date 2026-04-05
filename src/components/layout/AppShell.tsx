@@ -5,13 +5,14 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Users, Calendar, User, LogOut, Cpu } from "lucide-react";
+import { Users, Calendar, User, LogOut, Cpu, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 
 const navItems = [
   { href: "/clubs", label: "Clubs", icon: Users },
   { href: "/dashboard", label: "My Sessions", icon: Calendar },
+  { href: "/exp", label: "Expenses", icon: Receipt },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
