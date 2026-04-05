@@ -1,0 +1,44 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import PaymentModal from "@/components/payments/PaymentModal";
+
+type Props = {
+  sessionId: string;
+  fee: number;
+  isFull: boolean;
+};
+
+export default function JoinButton({ sessionId, fee, isFull }: Props) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  function handleSuccess() {
+    router.refresh();
+  }
+
+  if (isFull) {
+    return (
+      <Button disabled variant="secondary">
+        Session Full
+      </Button>
+    );
+  }
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>
+        {fee > 0 ? `Join · NT$${fee}` : "Join (Free)"}
+      </Button>
+      <PaymentModal
+        sessionId={sessionId}
+        fee={fee}
+        open={open}
+        onOpenChange={setOpen}
+        onSuccess={handleSuccess}
+      />
+    </>
+  );
+}
