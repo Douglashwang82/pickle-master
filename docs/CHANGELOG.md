@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0] — 2026-04-05
+
+### Added — Member Debt Tracking
+
+- **Join flow reworked**: member registration is immediately `confirmed` on join; payment transaction is created with status `initiated`, representing an outstanding debt to be collected offline
+- **DB migration** `20260405000001_member_debt_tracking.sql`: adds `debt_notified_at` to `payment_transactions`
+- **API** `POST /api/sessions/[sessionId]/notify-payment`: leader sends an in-app payment reminder to a specific member; stamps `debt_notified_at` on the transaction
+- **API** `POST /api/sessions/[sessionId]/mark-debt-paid`: leader marks a member's outstanding debt as `succeeded`; sends member a payment-received notification
+- **Roster API** updated: each row now includes `payment { id, status, amount_twd, debt_notified_at }` so the UI can render per-member payment state
+- **`RosterList` component**: shows green "Paid" / amber "Unpaid · NT$X" badge per member; leaders see "Notify" and "Mark Paid" action buttons for unpaid members
+- **`DebtProgressBar` component**: progress bar (amber → green when fully paid) showing collected vs outstanding amount and member count — rendered for leaders on the session detail page
+- **`domain.ts`**: added `DebtInfo` and `RegistrationWithPayment` types
+- **`database.types.ts`**: added `debt_notified_at` field to `payment_transactions` Row/Insert/Update
+
 ## [0.1.0] — 2026-04-02
 
 ### Added — Slice 1: Foundation

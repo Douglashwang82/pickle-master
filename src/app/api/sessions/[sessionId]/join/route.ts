@@ -2,14 +2,12 @@ import { requireAuth, requireClubMember, isNextResponse } from "@/lib/utils/auth
 import { supabaseAdmin } from "@/lib/db";
 import { ok, fail } from "@/lib/utils/api";
 import { JoinSessionSchema } from "@/lib/validations/payments";
-import { initiatePayment } from "@/lib/payment/client";
 import { sessionStatusAfterRegistration } from "@/lib/state-machines/session";
 import { trackEvent } from "@/lib/analytics";
 import type { SessionStatus } from "@/types/domain";
 
 type Params = { params: Promise<{ sessionId: string }> };
 
-const BOOKING_HOLD_MINUTES = 15;
 const PLATFORM_FEE_RATE = 0.05;
 
 export async function POST(request: Request, { params }: Params) {
@@ -71,16 +69,16 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   const now = new Date();
-  const holdExpiry = new Date(now.getTime() + BOOKING_HOLD_MINUTES * 60 * 1000).toISOString();
+  const nowStr = now.toISOString();
 
-  // Create payment_pending registration
+  // Create confirmed registration immediately (payment tracked as debt)
   const { data: registration, error: regError } = await supabaseAdmin
     .from("session_registrations")
     .insert({
       session_id: sessionId,
       user_id: auth.appUserId,
-      status: "payment_pending",
-      booking_hold_expires_at: holdExpiry,
+      status: "confirmed",
+      joined_at: nowStr,
     })
     .select()
     .single();
@@ -89,7 +87,7 @@ export async function POST(request: Request, { params }: Params) {
     return fail("Failed to create registration", "DB_ERROR", 500);
   }
 
-  // Create payment transaction record
+  // Create payment transaction as 'initiated' — this represents the outstanding debt
   const platformFee = Math.round(session.fee_twd * PLATFORM_FEE_RATE);
   const netAmount = session.fee_twd - platformFee;
 
@@ -100,7 +98,7 @@ export async function POST(request: Request, { params }: Params) {
       registration_id: registration.id,
       club_id: session.club_id,
       payer_user_id: auth.appUserId,
-      gateway: "mock",
+      gateway: "manual",
       amount_twd: session.fee_twd,
       platform_fee_twd: platformFee,
       net_amount_twd: netAmount,
@@ -115,67 +113,22 @@ export async function POST(request: Request, { params }: Params) {
       .from("session_registrations")
       .delete()
       .eq("id", registration.id);
-    return fail("Failed to initiate payment", "DB_ERROR", 500);
+    return fail("Failed to create debt record", "DB_ERROR", 500);
   }
+
+  // Link payment record to registration
+  await supabaseAdmin
+    .from("session_registrations")
+    .update({ payment_transaction_id: payment.id })
+    .eq("id", registration.id);
 
   await trackEvent("payment_initiated", {
     user_id: auth.appUserId,
     session_id: sessionId,
     club_id: session.club_id,
     amount: session.fee_twd,
-    method: "mock",
+    method: "manual",
   });
-
-  // Simulate payment failure if requested (dev only)
-  if (parsed.data.simulateFailure) {
-    await supabaseAdmin
-      .from("session_registrations")
-      .update({ status: "cancelled", cancelled_at: now.toISOString() })
-      .eq("id", registration.id);
-
-    await supabaseAdmin
-      .from("payment_transactions")
-      .update({
-        status: "failed",
-        failure_code: "MOCK_FAILURE",
-        failure_message: "Simulated payment failure",
-        updated_at: now.toISOString(),
-      })
-      .eq("id", payment.id);
-
-    await trackEvent("payment_failed", {
-      user_id: auth.appUserId,
-      session_id: sessionId,
-      club_id: session.club_id,
-      error_code: "MOCK_FAILURE",
-      method: "mock",
-    });
-
-    return fail("Payment failed (simulated)", "PAYMENT_FAILED", 402);
-  }
-
-  // Process mock payment
-  const paymentResult = await initiatePayment(session.fee_twd, registration.id);
-
-  // Confirm: update payment + registration
-  const nowStr = now.toISOString();
-  await supabaseAdmin
-    .from("payment_transactions")
-    .update({
-      status: "succeeded",
-      gateway_payment_id: paymentResult.gatewayPaymentId,
-      settled_at: nowStr,
-      updated_at: nowStr,
-    })
-    .eq("id", payment.id);
-
-  await supabaseAdmin
-    .from("session_registrations")
-    .update({
-      status: "confirmed",
-      payment_transaction_id: payment.id,
-    })
-    .eq("id", registration.id);
 
   // Update session status if now full
   const newConfirmedCount = (confirmedCount ?? 0) + 1;
@@ -192,28 +145,22 @@ export async function POST(request: Request, { params }: Params) {
       .eq("id", sessionId);
   }
 
-  await trackEvent("payment_success", {
-    user_id: auth.appUserId,
-    session_id: sessionId,
-    club_id: session.club_id,
-    amount: session.fee_twd,
-    method: "mock",
-  });
-
-  // Send confirmation notification
+  // Notify member: registration confirmed, payment outstanding
   await supabaseAdmin.from("notifications").insert({
     user_id: auth.appUserId,
     channel: "in_app",
     type: "session_joined",
     payload_json: {
       session_id: sessionId,
-      gateway_payment_id: paymentResult.gatewayPaymentId,
+      amount_twd: session.fee_twd,
+      message: `You have joined the session. Please pay NT$${session.fee_twd} to the club leader.`,
     },
   });
 
   return ok({
     registration_id: registration.id,
+    payment_transaction_id: payment.id,
     confirmed: true,
-    booking_hold_expires_at: holdExpiry,
+    debt_amount_twd: session.fee_twd,
   });
 }
