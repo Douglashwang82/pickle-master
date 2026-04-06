@@ -40,10 +40,10 @@ export async function GET(request: Request) {
       type: "session_reminder_24h",
       payload_json: {
         session_id: r.session_id,
-        title: (r.sessions as { title: string } | null)?.title,
-        scheduled_start_at: (r.sessions as { scheduled_start_at: string } | null)
+        title: (r.sessions as unknown as { title: string } | null)?.title,
+        scheduled_start_at: (r.sessions as unknown as { scheduled_start_at: string } | null)
           ?.scheduled_start_at,
-        location_name: (r.sessions as { location_name: string } | null)?.location_name,
+        location_name: (r.sessions as unknown as { location_name: string } | null)?.location_name,
       },
       send_at: nowStr,
     }));

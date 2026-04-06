@@ -62,7 +62,7 @@ export async function GET(_req: Request, { params }: Params) {
   );
 
   const players = (registrations ?? []).map((reg) => {
-    const user = reg.users as {
+    const user = reg.users as unknown as {
       id: string;
       profiles: { display_name: string; photo_url: string | null; reputation_score: number | null; review_count: number } | null;
     };

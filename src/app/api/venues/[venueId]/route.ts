@@ -21,7 +21,7 @@ export async function GET(_req: Request, { params }: Params) {
     .eq("venue_id", venueId);
 
   const count = ratings?.length ?? 0;
-  const avg = (key: keyof (typeof ratings)[0]) =>
+  const avg = (key: keyof NonNullable<typeof ratings>[0]) =>
     count > 0
       ? (ratings ?? []).reduce((sum, r) => sum + r[key], 0) / count
       : null;
@@ -55,7 +55,7 @@ export async function GET(_req: Request, { params }: Params) {
       review_count: count,
     },
     recent_reviews: (recentReviews ?? []).map((r) => {
-      const user = r.users as { profiles: { display_name: string } | null } | null;
+      const user = r.users as unknown as { profiles: { display_name: string } | null } | null;
       return {
         id: r.id,
         facilities_rating: r.facilities_rating,

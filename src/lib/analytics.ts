@@ -11,7 +11,9 @@ type EventName =
   | "membership_applied"
   | "membership_approved"
   | "signup_completed"
-  | "profile_completed";
+  | "profile_completed"
+  | "peer_review_submitted"
+  | "venue_review_submitted";
 
 type EventProps = Record<string, string | number | boolean | null>;
 
