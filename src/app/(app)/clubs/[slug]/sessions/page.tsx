@@ -17,19 +17,39 @@ export default async function SessionsPage({ params }: Params) {
   if (!user) redirect("/login");
 
   const { data: club } = await supabaseAdmin
-    .from("clubs").select("id, name, slug").eq("slug", slug).single();
+    .from("clubs").select("id, name, slug, owner_user_id").eq("slug", slug).single();
   if (!club) notFound();
 
   const { data: appUser } = await supabaseAdmin
     .from("users").select("id").eq("auth_provider_user_id", user.id).single();
   if (!appUser) redirect("/login");
 
-  const { data: membership } = await supabaseAdmin
+  const { data: membership, error: memError } = await supabaseAdmin
     .from("club_memberships").select("role, status")
-    .eq("club_id", club.id).eq("user_id", appUser.id).single();
-  if (membership?.status !== "active") redirect(`/clubs/${slug}`);
+    .eq("club_id", club.id).eq("user_id", appUser.id).maybeSingle();
 
-  const isLeader = membership.role === "leader";
+  if (memError) {
+    console.error('ERROR: SessionsPage membership query', memError);
+  }
+
+  const isLeader = membership?.role === "leader" || club.owner_user_id === appUser.id;
+  
+  console.log('DEBUG: SessionsPage check', {
+    slug,
+    clubId: club.id,
+    appUserId: appUser.id,
+    clubOwnerId: club.owner_user_id,
+    membership: membership ? { role: membership.role, status: membership.status } : 'NONE',
+    isLeader
+  });
+
+  if (membership?.status !== "active" && club.owner_user_id !== appUser.id) {
+    console.log('DEBUG: Redirecting non-member owner check', {
+      membershipStatus: membership?.status,
+      isOwner: club.owner_user_id === appUser.id
+    });
+    redirect(`/clubs/${slug}`);
+  }
 
   const { data: sessions } = await supabaseAdmin
     .from("sessions")
@@ -71,7 +91,7 @@ export default async function SessionsPage({ params }: Params) {
           <Button asChild>
             <Link href={`/clubs/${slug}/sessions/new`}>
               <Plus className="h-4 w-4 mr-1" />
-              New Session
+              Create Session
             </Link>
           </Button>
         )}

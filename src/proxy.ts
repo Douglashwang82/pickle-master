@@ -34,10 +34,12 @@ export async function proxy(request: NextRequest) {
 
   // Protect all /(app) routes
   const isAppRoute =
+    pathname !== "/" &&
     !pathname.startsWith("/login") &&
     !pathname.startsWith("/auth") &&
     !pathname.startsWith("/api") &&
     !pathname.startsWith("/_next") &&
+    !pathname.startsWith("/images") &&
     !pathname.startsWith("/favicon");
 
   if (isAppRoute && !user) {

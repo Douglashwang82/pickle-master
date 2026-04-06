@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Settings, Users, Calendar } from "lucide-react";
+import ApplicationStatusButton from "@/components/clubs/ApplicationStatusButton";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,8 @@ export default async function ClubDetailPage({ params }: Params) {
 
   // Check current user membership if logged in
   let currentMembership = null;
+  let currentApplication = null;
+  let appUserId: string | null = null;
   if (user) {
     const { data: appUser } = await supabaseAdmin
       .from("users")
@@ -43,6 +46,7 @@ export default async function ClubDetailPage({ params }: Params) {
       .single();
 
     if (appUser) {
+      appUserId = appUser.id;
       const { data: mem } = await supabaseAdmin
         .from("club_memberships")
         .select("role, status")
@@ -50,11 +54,24 @@ export default async function ClubDetailPage({ params }: Params) {
         .eq("user_id", appUser.id)
         .single();
       currentMembership = mem;
+
+      if (!mem || mem.status !== "active") {
+        const { data: app } = await supabaseAdmin
+          .from("membership_applications")
+          .select("id, status")
+          .eq("club_id", club.id)
+          .eq("user_id", appUser.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        if (app) currentApplication = app;
+      }
     }
   }
 
-  const isLeader = currentMembership?.role === "leader" && currentMembership?.status === "active";
-  const isMember = currentMembership?.status === "active";
+  const isLeader = (currentMembership?.role === "leader" && currentMembership?.status === "active") || 
+                    (club.owner_user_id === appUserId);
+  const isMember = currentMembership?.status === "active" || club.owner_user_id === appUserId;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -115,19 +132,9 @@ export default async function ClubDetailPage({ params }: Params) {
             </Button>
           </>
         ) : (
-          <ApplyButton clubId={club.id} clubSlug={club.slug} />
+          <ApplicationStatusButton clubId={club.id} clubSlug={club.slug} application={currentApplication} />
         )}
       </div>
     </div>
-  );
-}
-
-// Inline client component for apply action
-function ApplyButton({ clubId, clubSlug }: { clubId: string; clubSlug: string }) {
-  // This renders as a server-side link to the apply page (client interactivity via dedicated page)
-  return (
-    <Button asChild>
-      <Link href={`/clubs/${clubSlug}/apply`}>Apply to Join</Link>
-    </Button>
   );
 }

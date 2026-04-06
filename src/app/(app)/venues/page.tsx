@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/db";
 import { Star, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -66,43 +67,45 @@ export default async function VenuesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {venues.map((venue) => (
-            <Card key={venue.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">{venue.name}</CardTitle>
-                {venue.district && (
-                  <Badge variant="secondary" className="w-fit text-xs">
-                    {venue.district}
-                  </Badge>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {venue.address && (
-                  <div className="flex items-start gap-1 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3 mt-0.5 shrink-0" />
-                    <span>{venue.address}</span>
+            <Link key={venue.id} href={`/venues/${venue.id}`}>
+              <Card className="hover:border-primary transition-colors cursor-pointer h-full">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">{venue.name}</CardTitle>
+                  {venue.district && (
+                    <Badge variant="secondary" className="w-fit text-xs">
+                      {venue.district}
+                    </Badge>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {venue.address && (
+                    <div className="flex items-start gap-1 text-xs text-muted-foreground">
+                      <MapPin className="h-3 w-3 mt-0.5 shrink-0" />
+                      <span>{venue.address}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1">
+                    <Star
+                      className={`h-4 w-4 ${
+                        venue.avg_rating !== null
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-muted-foreground"
+                      }`}
+                    />
+                    {venue.avg_rating !== null ? (
+                      <span className="text-sm font-medium">{venue.avg_rating.toFixed(1)}</span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No ratings yet</span>
+                    )}
+                    {venue.review_count > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        ({venue.review_count})
+                      </span>
+                    )}
                   </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Star
-                    className={`h-4 w-4 ${
-                      venue.avg_rating !== null
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-muted-foreground"
-                    }`}
-                  />
-                  {venue.avg_rating !== null ? (
-                    <span className="text-sm font-medium">{venue.avg_rating.toFixed(1)}</span>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">No ratings yet</span>
-                  )}
-                  {venue.review_count > 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      ({venue.review_count})
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

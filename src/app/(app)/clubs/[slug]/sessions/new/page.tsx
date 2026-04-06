@@ -14,7 +14,7 @@ export default async function NewSessionPage({ params }: Params) {
   if (!user) redirect("/login");
 
   const { data: club } = await supabaseAdmin
-    .from("clubs").select("id, name, slug").eq("slug", slug).single();
+    .from("clubs").select("id, name, slug, owner_user_id").eq("slug", slug).single();
   if (!club) notFound();
 
   const { data: appUser } = await supabaseAdmin
@@ -25,9 +25,15 @@ export default async function NewSessionPage({ params }: Params) {
     .from("club_memberships").select("role, status")
     .eq("club_id", club.id).eq("user_id", appUser.id).single();
 
-  if (membership?.role !== "leader" || membership?.status !== "active") {
+  const isLeader = membership?.role === "leader" || club.owner_user_id === appUser.id;
+  if (!isLeader || (membership?.status !== "active" && club.owner_user_id !== appUser.id)) {
     redirect(`/clubs/${slug}/sessions`);
   }
+
+  const { data: venues } = await supabaseAdmin
+    .from("venues" as any)
+    .select("id, name, district")
+    .order("name");
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -35,7 +41,7 @@ export default async function NewSessionPage({ params }: Params) {
         <h1 className="text-2xl font-bold">New Session</h1>
         <p className="text-muted-foreground text-sm mt-1">{club.name}</p>
       </div>
-      <SessionForm clubId={club.id} clubSlug={club.slug} />
+      <SessionForm clubId={club.id} clubSlug={club.slug} venues={venues || []} />
     </div>
   );
 }

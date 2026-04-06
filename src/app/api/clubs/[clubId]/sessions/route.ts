@@ -62,10 +62,22 @@ export async function POST(request: Request, { params }: Params) {
     return fail("Validation error", "VALIDATION_ERROR", 400, parsed.error.flatten());
   }
 
+  // Fetch venue to get its name as the legacy location_name fallback
+  const { data: venue } = await supabaseAdmin
+    .from("venues" as any)
+    .select("name")
+    .eq("id", parsed.data.venue_id)
+    .single();
+
+  if (!venue) {
+    return fail("Invalid venue selected", "VALIDATION_ERROR", 400);
+  }
+
   const { data: session, error } = await supabaseAdmin
     .from("sessions")
     .insert({
       ...parsed.data,
+      location_name: venue.name,
       club_id: clubId,
       created_by: auth.appUserId,
       status: "published",

@@ -16,5 +16,24 @@ export async function GET() {
     return fail("User not found", "USER_NOT_FOUND", 404);
   }
 
-  return ok(data);
+  const { data: reviewsData } = await (supabaseAdmin as any)
+    .from("peer_reviews")
+    .select(`
+      rating,
+      badges,
+      created_at,
+      reviewer_user_id,
+      reviewer:users!reviewer_user_id(
+        profiles(
+          display_name
+        )
+      )
+    `)
+    .eq("reviewee_user_id", auth.appUserId)
+    .order("created_at", { ascending: false });
+
+  return ok({
+    ...data,
+    peer_reviews: reviewsData || [],
+  });
 }

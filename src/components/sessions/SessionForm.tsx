@@ -7,17 +7,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Props = {
   clubId: string;
   clubSlug: string;
+  venues: { id: string; name: string; district?: string }[];
 };
 
-export default function SessionForm({ clubId, clubSlug }: Props) {
+export default function SessionForm({ clubId, clubSlug, venues }: Props) {
   const router = useRouter();
   const [form, setForm] = useState({
     title: "",
-    location_name: "",
+    venue_id: "",
     scheduled_start_at: "",
     scheduled_end_at: "",
     duration_minutes: 90,
@@ -81,14 +89,23 @@ export default function SessionForm({ clubId, clubSlug }: Props) {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="location">Location *</Label>
-            <Input
-              id="location"
-              value={form.location_name}
-              onChange={(e) => set("location_name", e.target.value)}
-              placeholder="Xinyi Sports Center, Court 3"
+            <Label htmlFor="venue">Venue *</Label>
+            <Select
+              value={form.venue_id}
+              onValueChange={(val) => set("venue_id", val)}
               required
-            />
+            >
+              <SelectTrigger id="venue">
+                <SelectValue placeholder="Select a venue" />
+              </SelectTrigger>
+              <SelectContent>
+                {venues.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.name} {v.district ? `(${v.district})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -151,7 +168,7 @@ export default function SessionForm({ clubId, clubSlug }: Props) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !form.venue_id}>
               {loading ? "Creating…" : "Create session"}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>

@@ -25,16 +25,18 @@ export default async function SessionDetailPage({ params }: Params) {
     .from("users").select("id").eq("auth_provider_user_id", user.id).single();
   if (!appUser) redirect("/login");
 
-  const { data: session } = await supabaseAdmin
+  const { data: session, error: sessionError } = await supabaseAdmin
     .from("sessions")
-    .select("*, clubs(id, slug, name), venues(id, name)")
+    .select("*, clubs(id, slug, name, owner_user_id)")
     .eq("id", sessionId)
-    .single();
+    .maybeSingle();
+
+  console.log('DEBUG: SessionDetailPage session fetch', { sessionId, session: session ? 'FOUND' : 'NULL', error: sessionError });
 
   if (!session) notFound();
 
-  const club = session.clubs as { id: string; slug: string; name: string } | null;
-  const venue = session.venues as { id: string; name: string } | null;
+  const club = session.clubs as { id: string; slug: string; name: string; owner_user_id: string } | null;
+  const venue = null; // Venues relationship does not exist on sessions table
   if (!club) notFound();
 
   // Membership check
@@ -42,9 +44,9 @@ export default async function SessionDetailPage({ params }: Params) {
     .from("club_memberships").select("role, status")
     .eq("club_id", club.id).eq("user_id", appUser.id).single();
 
-  if (membership?.status !== "active") redirect(`/clubs/${club.slug}`);
+  if (membership?.status !== "active" && club.owner_user_id !== appUser.id) redirect(`/clubs/${club.slug}`);
 
-  const isLeader = membership.role === "leader";
+  const isLeader = (membership?.role === "leader" && membership?.status === "active") || club.owner_user_id === appUser.id;
 
   // Count confirmed
   const { count } = await supabaseAdmin
@@ -155,7 +157,7 @@ export default async function SessionDetailPage({ params }: Params) {
       {/* Actions */}
       {session.status !== "cancelled" && (
         <div className="flex flex-wrap gap-3">
-          {!isLeader && !myReg && session.status !== "auto_closed" && session.status !== "completed" && (
+          {!myReg && session.status !== "auto_closed" && session.status !== "completed" && (
             <JoinButton
               sessionId={sessionId}
               fee={session.fee_twd}
@@ -182,8 +184,8 @@ export default async function SessionDetailPage({ params }: Params) {
           <Separator />
           <ReviewSection
             sessionId={sessionId}
-            venueId={venue?.id ?? null}
-            venueName={venue?.name ?? null}
+            venueId={null}
+            venueName={null}
           />
         </>
       )}

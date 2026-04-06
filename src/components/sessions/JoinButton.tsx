@@ -16,6 +16,7 @@ export default function JoinButton({ sessionId, fee, isFull }: Props) {
   const [open, setOpen] = useState(false);
 
   function handleSuccess() {
+    window.dispatchEvent(new CustomEvent('rosterRefresh'));
     router.refresh();
   }
 

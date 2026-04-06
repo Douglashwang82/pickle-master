@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +17,7 @@ type Props = {
 export default function RosterList({ sessionId, isLeader }: Props) {
   const [roster, setRoster] = useState<RegistrationWithPayment[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
@@ -48,8 +50,13 @@ export default function RosterList({ sessionId, isLeader }: Props) {
       )
       .subscribe();
 
+    // Manual local override
+    const handleLocalRefresh = () => fetchRoster();
+    window.addEventListener("rosterRefresh", handleLocalRefresh);
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener("rosterRefresh", handleLocalRefresh);
     };
   }, [sessionId]);
 
@@ -90,6 +97,7 @@ export default function RosterList({ sessionId, isLeader }: Props) {
               fetch(`/api/sessions/${sessionId}/roster`)
                 .then((r) => r.json())
                 .then(setRoster);
+              router.refresh();
             }}
           />
         ))}
@@ -105,6 +113,7 @@ export default function RosterList({ sessionId, isLeader }: Props) {
                 fetch(`/api/sessions/${sessionId}/roster`)
                   .then((r) => r.json())
                   .then(setRoster);
+                router.refresh();
               }}
             />
           ))}

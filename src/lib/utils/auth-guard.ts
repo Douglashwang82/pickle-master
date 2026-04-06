@@ -66,6 +66,11 @@ export async function requireClubLeader(
   clubId: string,
   userId: string
 ): Promise<null | NextResponse> {
+  // First check club owner
+  const { data: club } = await supabaseAdmin
+    .from("clubs").select("owner_user_id").eq("id", clubId).single();
+  if (club?.owner_user_id === userId) return null;
+
   const { data } = await supabaseAdmin
     .from("club_memberships")
     .select("id")
@@ -89,6 +94,11 @@ export async function requireClubMember(
   clubId: string,
   userId: string
 ): Promise<null | NextResponse> {
+  // Owners are automatically considered members
+  const { data: club } = await supabaseAdmin
+    .from("clubs").select("owner_user_id").eq("id", clubId).single();
+  if (club?.owner_user_id === userId) return null;
+
   const { data } = await supabaseAdmin
     .from("club_memberships")
     .select("id")
