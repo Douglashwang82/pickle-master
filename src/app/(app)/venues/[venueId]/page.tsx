@@ -1,6 +1,6 @@
 import { requireAuth, isNextResponse } from "@/lib/utils/auth-guard";
 import { supabaseAdmin } from "@/lib/db";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Star, MapPin, Map } from "lucide-react";
 import VenueRatingClient from "./VenueRatingClient";
 import { format } from "date-fns";
@@ -113,7 +113,7 @@ async function getEligibleSessionToReview(venueId: string, userId: string) {
 
 export default async function VenueDetailPage({ params }: Params) {
   const auth = await requireAuth();
-  if (isNextResponse(auth)) return auth;
+  if (isNextResponse(auth)) redirect("/login");
 
   const { venueId } = await params;
   const [venue, reviews, eligibleSessionId] = await Promise.all([
