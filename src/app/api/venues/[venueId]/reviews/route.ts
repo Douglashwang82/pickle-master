@@ -27,7 +27,7 @@ export async function GET(_req: Request, { params }: Params) {
     .limit(20);
 
   const result = (reviews ?? []).map((r) => {
-    const user = r.users as { profiles: { display_name: string } | null } | null;
+    const user = r.users as unknown as { profiles: { display_name: string } | null } | null;
     return {
       id: r.id,
       facilities_rating: r.facilities_rating,
