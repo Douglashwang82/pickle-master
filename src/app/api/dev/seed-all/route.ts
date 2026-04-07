@@ -23,16 +23,16 @@ export async function GET(request: Request) {
 
     // 1. Seed Users
     const usersToSeed = [
-      { email: "player1@example.com", name: "Alpha Player", skill: "pro" },
-      { email: "player2@example.com", name: "Beta Smash", skill: "advanced" },
-      { email: "player3@example.com", name: "Gamma Dinker", skill: "intermediate" },
-      { email: "player4@example.com", name: "Delta Lobber", skill: "beginner" },
-      { email: "player5@example.com", name: "Epsilon Spinner", skill: "intermediate" },
-      { email: "player6@example.com", name: "Zeta Server", skill: "advanced" },
-      { email: "player7@example.com", name: "Eta Volleyer", skill: "pro" },
-      { email: "player8@example.com", name: "Theta Kitchener", skill: "intermediate" },
-      { email: "player9@example.com", name: "Iota Rookie", skill: "beginner" },
-      { email: "player10@example.com", name: "Kappa Master", skill: "pro" },
+      { email: "player1@example.com", name: "Alpha Player", skill: "pro", avatar: "/images/avatars/user-1.png" },
+      { email: "player2@example.com", name: "Beta Smash", skill: "advanced", avatar: "/images/avatars/user-2.png" },
+      { email: "player3@example.com", name: "Gamma Dinker", skill: "intermediate", avatar: "/images/avatars/user-3.png" },
+      { email: "player4@example.com", name: "Delta Lobber", skill: "beginner", avatar: "/images/avatars/user-4.png" },
+      { email: "player5@example.com", name: "Epsilon Spinner", skill: "intermediate", avatar: "/images/avatars/user-5.png" },
+      { email: "player6@example.com", name: "Zeta Server", skill: "advanced", avatar: "/images/avatars/user-6.png" },
+      { email: "player7@example.com", name: "Eta Volleyer", skill: "pro", avatar: "/images/avatars/user-7.png" },
+      { email: "player8@example.com", name: "Theta Kitchener", skill: "intermediate", avatar: "/images/avatars/user-8.png" },
+      { email: "player9@example.com", name: "Iota Rookie", skill: "beginner", avatar: "/images/avatars/user-9.png" },
+      { email: "player10@example.com", name: "Kappa Master", skill: "pro", avatar: "/images/avatars/user-10.png" },
     ];
 
     const seededUsers = [];
@@ -79,6 +79,7 @@ export async function GET(request: Request) {
         user_id: appUser.id,
         display_name: u.name,
         skill_level: u.skill,
+        photo_url: u.avatar,
         bio: `Seasoned ${u.skill} player from Taipei. Love the kitchen game!`,
       }, { onConflict: "user_id" });
 
