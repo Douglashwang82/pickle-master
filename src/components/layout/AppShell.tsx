@@ -8,18 +8,21 @@ import { useRouter } from "next/navigation";
 import { Users, Calendar, User, LogOut, Cpu, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
-
-const navItems = [
-  { href: "/clubs", label: "Clubs", icon: Users },
-  { href: "/dashboard", label: "My Sessions", icon: Calendar },
-  { href: "/venues", label: "Venues", icon: MapPin },
-  { href: "/profile", label: "Profile", icon: User },
-];
+import { useLanguage } from "@/lib/i18n/context";
+import LanguageToggle from "./LanguageToggle";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { href: "/clubs", label: t("nav.clubs"), icon: Users },
+    { href: "/dashboard", label: t("nav.sessions"), icon: Calendar },
+    { href: "/venues", label: t("nav.venues"), icon: MapPin },
+    { href: "/profile", label: t("nav.profile"), icon: User },
+  ];
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -54,10 +57,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          <Button variant="ghost" size="sm" onClick={handleSignOut} className="font-semibold text-muted-foreground hover:text-primary hover:bg-secondary rounded-full px-4">
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign out
-          </Button>
+          <div className="flex items-center gap-3">
+            <LanguageToggle className="hidden sm:flex" />
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="font-semibold text-muted-foreground hover:text-primary hover:bg-secondary rounded-full px-4">
+              <LogOut className="h-4 w-4 mr-2" />
+              {t("nav.signOut")}
+            </Button>
+          </div>
         </div>
 
         {/* Mobile nav */}

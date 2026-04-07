@@ -1,8 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/i18n/context";
+import LanguageToggle from "@/components/layout/LanguageToggle";
 
 export default function RootPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-accent selection:text-accent-foreground">
       {/* Top Navigation */}
@@ -12,12 +18,17 @@ export default function RootPage() {
           <div className="w-3 h-3 rounded-full bg-accent" />
           PickleMaster
         </div>
-        <nav className="flex gap-4">
+        <nav className="flex items-center gap-4">
+          <LanguageToggle className="hidden sm:flex mr-2" />
           <Link href="/login">
-            <Button variant="ghost" className="text-primary font-medium hover:bg-secondary">Sign In</Button>
+            <Button variant="ghost" className="text-primary font-medium hover:bg-secondary">
+              {t("nav.signIn")}
+            </Button>
           </Link>
           <Link href="/clubs">
-            <Button className="font-semibold shadow-sm rounded-full px-6">Find Clubs</Button>
+            <Button className="font-semibold shadow-sm rounded-full px-6">
+              {t("nav.findClubs")}
+            </Button>
           </Link>
         </nav>
       </header>
@@ -31,27 +42,27 @@ export default function RootPage() {
 
           <div className="max-w-xl animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
             <div className="inline-flex items-center px-4 py-1.5 mb-8 text-sm font-bold tracking-wide uppercase rounded-full bg-accent text-accent-foreground shadow-sm">
-              Premium Club Management
+              {t("home.badge")}
             </div>
             
             <h1 className="text-6xl md:text-7xl lg:text-[5rem] font-extrabold tracking-tight mb-8 leading-[1.1] text-foreground">
-              Master Your <br />
-              <span className="text-primary">Court Time.</span>
+              {t("home.title_part1")} <br />
+              <span className="text-primary">{t("home.title_part2")}</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed max-w-md">
-              The elegant way to manage sessions, track player ELO, and organize your pickleball community. Built for clubs that value the game.
+              {t("home.description")}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/clubs">
                 <Button size="lg" className="w-full sm:w-auto font-bold shadow-md text-base px-8 rounded-full h-14">
-                  Explore Clubs
+                  {t("home.exploreClubs")}
                 </Button>
               </Link>
               <Link href="/login">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto font-bold text-base px-8 border-primary/20 text-primary hover:bg-secondary hover:border-primary/50 rounded-full h-14 transition-all">
-                  Club Leader Login
+                  {t("home.leaderLogin")}
                 </Button>
               </Link>
             </div>
