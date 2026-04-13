@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Users, Calendar, User, LogOut, Cpu, MapPin } from "lucide-react";
+import { Users, Calendar, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useLanguage } from "@/lib/i18n/context";
@@ -18,10 +18,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
 
   const navItems = [
-    { href: "/clubs", label: t("nav.clubs"), icon: Users },
-    { href: "/dashboard", label: t("nav.sessions"), icon: Calendar },
-    { href: "/venues", label: t("nav.venues"), icon: MapPin },
-    { href: "/profile", label: t("nav.profile"), icon: User },
+    { href: "/dashboard", label: "Home", icon: Calendar, match: ["/dashboard", "/sessions"] },
+    { href: "/clubs", label: t("nav.clubs"), icon: Users, match: ["/clubs"] },
+    { href: "/profile", label: t("nav.profile"), icon: User, match: ["/profile"] },
   ];
 
   async function handleSignOut() {
@@ -40,21 +39,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav className="hidden md:flex items-center gap-2">
-            {navItems.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200",
-                  pathname.startsWith(href)
-                    ? "bg-accent/20 text-primary shadow-sm"
-                    : "text-muted-foreground hover:text-primary hover:bg-secondary"
-                )}
-              >
-                <Icon className={cn("h-4 w-4", pathname.startsWith(href) ? "text-accent-foreground" : "")} />
-                {label}
-              </Link>
-            ))}
+            {navItems.map(({ href, label, icon: Icon, match }) => {
+              const isActive = match.some((m) => pathname.startsWith(m));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200",
+                    isActive
+                      ? "bg-accent/20 text-primary shadow-sm"
+                      : "text-muted-foreground hover:text-primary hover:bg-secondary"
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4", isActive ? "text-accent-foreground" : "")} />
+                  {label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -68,21 +70,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Mobile nav */}
         <nav className="md:hidden flex border-t border-border/40 bg-background pb-safe">
-          {navItems.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex-1 flex flex-col items-center gap-1 py-3 text-[10px] uppercase tracking-wider font-bold transition-colors select-none",
-                pathname.startsWith(href)
-                  ? "text-primary bg-accent/10"
-                  : "text-muted-foreground hover:bg-secondary/50"
-              )}
-            >
-              <Icon className={cn("h-5 w-5 mb-0.5", pathname.startsWith(href) ? "text-accent" : "")} />
-              {label}
-            </Link>
-          ))}
+          {navItems.map(({ href, label, icon: Icon, match }) => {
+            const isActive = match.some((m) => pathname.startsWith(m));
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-1 py-3 text-[10px] uppercase tracking-wider font-bold transition-colors select-none",
+                  isActive ? "text-primary bg-accent/10" : "text-muted-foreground hover:bg-secondary/50"
+                )}
+              >
+                <Icon className={cn("h-5 w-5 mb-0.5", isActive ? "text-accent" : "")} />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
       </header>
 
