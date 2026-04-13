@@ -19,9 +19,10 @@ type Props = {
   clubId: string;
   clubSlug: string;
   venues: { id: string; name: string; district?: string }[];
+  onCancel?: () => void;
 };
 
-export default function SessionForm({ clubId, clubSlug, venues }: Props) {
+export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Props) {
   const router = useRouter();
   const [form, setForm] = useState({
     title: "",
@@ -171,7 +172,7 @@ export default function SessionForm({ clubId, clubSlug, venues }: Props) {
             <Button type="submit" disabled={loading || !form.venue_id}>
               {loading ? "Creating…" : "Create session"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button type="button" variant="outline" onClick={() => onCancel ? onCancel() : router.back()}>
               Cancel
             </Button>
           </div>

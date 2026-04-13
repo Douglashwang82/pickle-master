@@ -1,19 +1,15 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { supabaseAdmin } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Settings, Users, Calendar } from "lucide-react";
-import ApplicationStatusButton from "@/components/clubs/ApplicationStatusButton";
+import ClubDetailTabs from "@/components/clubs/ClubDetailTabs";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: Promise<{ slug: string }> };
+type Params = { params: Promise<{ slug: string }>; searchParams: Promise<{ tab?: string }> };
 
-export default async function ClubDetailPage({ params }: Params) {
+export default async function ClubDetailPage({ params, searchParams }: Params) {
   const { slug } = await params;
+  const { tab } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -27,17 +23,18 @@ export default async function ClubDetailPage({ params }: Params) {
 
   if (!club) notFound();
 
-  // Fetch member count
+  // Member count
   const { count: memberCount } = await supabaseAdmin
     .from("club_memberships")
     .select("*", { count: "exact", head: true })
     .eq("club_id", club.id)
     .eq("status", "active");
 
-  // Check current user membership if logged in
-  let currentMembership = null;
-  let currentApplication = null;
+  // Resolve current user
   let appUserId: string | null = null;
+  let currentMembership: { role: string; status: string } | null = null;
+  let currentApplication: { id: string; status: string } | null = null;
+
   if (user) {
     const { data: appUser } = await supabaseAdmin
       .from("users")
@@ -47,6 +44,7 @@ export default async function ClubDetailPage({ params }: Params) {
 
     if (appUser) {
       appUserId = appUser.id;
+
       const { data: mem } = await supabaseAdmin
         .from("club_memberships")
         .select("role, status")
@@ -69,72 +67,120 @@ export default async function ClubDetailPage({ params }: Params) {
     }
   }
 
-  const isLeader = (currentMembership?.role === "leader" && currentMembership?.status === "active") || 
-                    (club.owner_user_id === appUserId);
+  const isLeader =
+    (currentMembership?.role === "leader" && currentMembership?.status === "active") ||
+    club.owner_user_id === appUserId;
   const isMember = currentMembership?.status === "active" || club.owner_user_id === appUserId;
 
+  // Determine default tab: members see Sessions; non-members see Info
+  const validTabs = ["sessions", "members", "info", "settings"];
+  const initialTab = tab && validTabs.includes(tab) ? tab : isMember ? "sessions" : "info";
+
+  // Sessions (for Sessions tab)
+  const { data: sessions } = await supabaseAdmin
+    .from("sessions")
+    .select("*")
+    .eq("club_id", club.id)
+    .in("status", ["published", "full"])
+    .gte("scheduled_start_at", new Date().toISOString())
+    .order("scheduled_start_at", { ascending: true });
+
+  const sessionIds = (sessions ?? []).map((s) => s.id);
+  const { data: regCounts } = sessionIds.length
+    ? await supabaseAdmin
+        .from("session_registrations")
+        .select("session_id")
+        .in("session_id", sessionIds)
+        .eq("status", "confirmed")
+    : { data: [] };
+
+  const countMap: Record<string, number> = {};
+  for (const r of regCounts ?? []) {
+    countMap[r.session_id] = (countMap[r.session_id] ?? 0) + 1;
+  }
+
+  const sessionsWithSpots = (sessions ?? []).map((s) => ({
+    ...s,
+    confirmed_count: countMap[s.id] ?? 0,
+    available_spots: s.capacity - (countMap[s.id] ?? 0),
+  }));
+
+  // Members + applications (for Members tab)
+  const { data: membersRaw } = isMember
+    ? await supabaseAdmin
+        .from("club_memberships")
+        .select("id, role, status, user_id, joined_at")
+        .eq("club_id", club.id)
+        .eq("status", "active")
+        .order("joined_at", { ascending: true })
+    : { data: [] };
+
+  const { data: appsRaw } = isLeader
+    ? await supabaseAdmin
+        .from("membership_applications")
+        .select("id, user_id, intro_message, created_at")
+        .eq("club_id", club.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: true })
+    : { data: [] };
+
+  // Batch-fetch profiles for members + applicants
+  const memberUserIds = (membersRaw ?? []).map((m) => m.user_id);
+  const appUserIds = (appsRaw ?? []).map((a) => a.user_id);
+  const allUserIds = Array.from(new Set([...memberUserIds, ...appUserIds]));
+
+  type Profile = { display_name: string; photo_url: string | null; skill_level: string | null; bio: string | null };
+  const profileMap: Record<string, Profile> = {};
+  if (allUserIds.length > 0) {
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id, display_name, photo_url, skill_level, bio")
+      .in("user_id", allUserIds);
+    for (const p of profiles ?? []) {
+      profileMap[p.user_id] = p;
+    }
+  }
+
+  const members = (membersRaw ?? []).map((m) => ({
+    ...m,
+    profile: profileMap[m.user_id] ?? null,
+  }));
+
+  const applications = (appsRaw ?? []).map((a) => ({
+    ...a,
+    profiles: profileMap[a.user_id] ?? null,
+  }));
+
+  // Venues (for Create Session sheet)
+  const { data: venuesRaw } = await supabaseAdmin
+    .from("venues" as any)
+    .select("id, name, district")
+    .order("name");
+
+  const venues = (venuesRaw ?? []) as { id: string; name: string; district?: string }[];
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {club.cover_image_url && (
-        <div className="aspect-video overflow-hidden rounded-xl">
-          <img src={club.cover_image_url} alt={club.name} className="w-full h-full object-cover" />
-        </div>
-      )}
-
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{club.name}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="secondary" className="capitalize">{club.sport_type}</Badge>
-            <span className="text-sm text-muted-foreground">{memberCount ?? 0} members</span>
-          </div>
-        </div>
-        {isLeader && (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/clubs/${club.slug}/settings`}>
-              <Settings className="h-4 w-4 mr-1" />
-              Settings
-            </Link>
-          </Button>
-        )}
-      </div>
-
-      {club.description && (
-        <p className="text-muted-foreground">{club.description}</p>
-      )}
-
-      {club.rules && (
-        <>
-          <Separator />
-          <div>
-            <h2 className="font-semibold mb-2">Club Rules</h2>
-            <p className="text-sm text-muted-foreground whitespace-pre-line">{club.rules}</p>
-          </div>
-        </>
-      )}
-
-      <Separator />
-
-      <div className="flex flex-wrap gap-3">
-        {isMember ? (
-          <>
-            <Button asChild>
-              <Link href={`/clubs/${club.slug}/sessions`}>
-                <Calendar className="h-4 w-4 mr-1" />
-                Sessions
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href={`/clubs/${club.slug}/members`}>
-                <Users className="h-4 w-4 mr-1" />
-                Members
-              </Link>
-            </Button>
-          </>
-        ) : (
-          <ApplicationStatusButton clubId={club.id} clubSlug={club.slug} application={currentApplication} />
-        )}
-      </div>
-    </div>
+    <ClubDetailTabs
+      club={{
+        id: club.id,
+        slug: club.slug,
+        name: club.name,
+        description: club.description,
+        rules: club.rules,
+        cover_image_url: club.cover_image_url,
+        sport_type: club.sport_type,
+        public_status: club.public_status === "private" ? "private" : "public",
+        owner_user_id: club.owner_user_id,
+      }}
+      initialTab={initialTab}
+      isLeader={isLeader}
+      isMember={isMember}
+      memberCount={memberCount ?? 0}
+      sessions={sessionsWithSpots}
+      members={members}
+      applications={applications}
+      venues={venues}
+      currentApplication={currentApplication}
+    />
   );
 }
