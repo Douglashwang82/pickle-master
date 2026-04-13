@@ -15,6 +15,7 @@ import ApplicationReview from "@/components/clubs/ApplicationReview";
 import ClubForm from "@/components/clubs/ClubForm";
 import ApplyDialog from "@/components/clubs/ApplyDialog";
 import ClubAnalytics from "@/components/clubs/ClubAnalytics";
+import AnnounceDialog from "@/components/clubs/AnnounceDialog";
 import type { SessionWithSpots } from "@/types/domain";
 import type { ClubAnalyticsData } from "@/app/api/clubs/[clubId]/analytics/route";
 
@@ -119,6 +120,11 @@ export default function ClubDetailTabs({
             <span className="text-sm text-muted-foreground">{memberCount} members</span>
           </div>
         </div>
+        {isLeader && (
+          <div className="shrink-0 pt-1">
+            <AnnounceDialog clubId={club.id} memberCount={memberCount} />
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
