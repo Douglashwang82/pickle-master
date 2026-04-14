@@ -14,7 +14,10 @@ import SessionForm from "@/components/sessions/SessionForm";
 import ApplicationReview from "@/components/clubs/ApplicationReview";
 import ClubForm from "@/components/clubs/ClubForm";
 import ApplyDialog from "@/components/clubs/ApplyDialog";
+import ClubAnalytics from "@/components/clubs/ClubAnalytics";
+import AnnounceDialog from "@/components/clubs/AnnounceDialog";
 import type { SessionWithSpots } from "@/types/domain";
+import type { ClubAnalyticsData } from "@/app/api/clubs/[clubId]/analytics/route";
 
 type ClubData = {
   id: string;
@@ -72,6 +75,7 @@ type Props = {
   applications: ApplicationRow[];
   venues: VenueOption[];
   currentApplication: { id: string; status: string } | null;
+  analyticsData: ClubAnalyticsData | null;
 };
 
 export default function ClubDetailTabs({
@@ -85,6 +89,7 @@ export default function ClubDetailTabs({
   applications,
   venues,
   currentApplication,
+  analyticsData,
 }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -115,6 +120,11 @@ export default function ClubDetailTabs({
             <span className="text-sm text-muted-foreground">{memberCount} members</span>
           </div>
         </div>
+        {isLeader && (
+          <div className="shrink-0 pt-1">
+            <AnnounceDialog clubId={club.id} memberCount={memberCount} />
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
@@ -132,6 +142,7 @@ export default function ClubDetailTabs({
             </TabsTrigger>
           )}
           <TabsTrigger value="info">Info</TabsTrigger>
+          {isLeader && <TabsTrigger value="analytics">Analytics</TabsTrigger>}
           {isLeader && <TabsTrigger value="settings">Settings</TabsTrigger>}
         </TabsList>
 
@@ -257,6 +268,17 @@ export default function ClubDetailTabs({
             </>
           )}
         </TabsContent>
+
+        {/* ── Analytics tab (leader only) ── */}
+        {isLeader && (
+          <TabsContent value="analytics" className="mt-6">
+            {analyticsData ? (
+              <ClubAnalytics data={analyticsData} />
+            ) : (
+              <p className="text-sm text-muted-foreground">Analytics unavailable.</p>
+            )}
+          </TabsContent>
+        )}
 
         {/* ── Settings tab (leader only) ── */}
         {isLeader && (

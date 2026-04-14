@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useLanguage } from "@/lib/i18n/context";
 import LanguageToggle from "./LanguageToggle";
+import NotificationBell from "./NotificationBell";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -61,6 +62,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-3">
             <LanguageToggle className="hidden sm:flex" />
+            <NotificationBell />
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="font-semibold text-muted-foreground hover:text-primary hover:bg-secondary rounded-full px-4">
               <LogOut className="h-4 w-4 mr-2" />
               {t("nav.signOut")}

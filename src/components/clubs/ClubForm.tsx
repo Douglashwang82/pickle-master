@@ -7,10 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import CoverImageUpload from "@/components/clubs/CoverImageUpload";
 import type { Club } from "@/types/domain";
 
 type Props = {
-  club?: Pick<Club, "id" | "slug" | "name" | "description" | "rules" | "public_status">;
+  club?: Pick<
+    Club,
+    "id" | "slug" | "name" | "description" | "rules" | "public_status" | "cover_image_url"
+  >;
 };
 
 export default function ClubForm({ club }: Props) {
@@ -24,6 +28,9 @@ export default function ClubForm({ club }: Props) {
   const [publicStatus, setPublicStatus] = useState<"public" | "private">(
     club?.public_status === "private" ? "private" : "public"
   );
+  const [coverImageUrl, setCoverImageUrl] = useState<string>(
+    club?.cover_image_url ?? ""
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +43,14 @@ export default function ClubForm({ club }: Props) {
     setLoading(true);
     setError(null);
 
-    const payload = { name, slug, description, rules, public_status: publicStatus };
+    const payload = {
+      name,
+      slug,
+      description,
+      rules,
+      public_status: publicStatus,
+      cover_image_url: coverImageUrl || undefined,
+    };
     const url = isEditing ? `/api/clubs/${club!.id}` : "/api/clubs";
     const method = isEditing ? "PATCH" : "POST";
 
@@ -67,6 +81,16 @@ export default function ClubForm({ club }: Props) {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
+          {/* Cover image */}
+          <div className="space-y-1">
+            <Label>Cover image</Label>
+            <CoverImageUpload
+              currentUrl={coverImageUrl || null}
+              onUpload={(url) => setCoverImageUrl(url)}
+              onRemove={() => setCoverImageUrl("")}
+            />
+          </div>
 
           <div className="space-y-1">
             <Label htmlFor="name">Club name *</Label>
