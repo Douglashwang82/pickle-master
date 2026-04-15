@@ -136,7 +136,7 @@ export default async function PublicClubsPage(props: {
           <p className="text-muted-foreground text-lg max-w-xl">找到您的球友圈，一起上場。加入現有社團或創建您自己的社團。</p>
         </div>
         <Button asChild className="rounded-full font-bold shadow-sm md:w-auto w-full group py-6 px-6">
-          <Link href="/login">
+          <Link href="/clubs/new">
             <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
             創建社團
           </Link>
