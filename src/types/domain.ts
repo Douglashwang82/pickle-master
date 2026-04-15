@@ -15,16 +15,18 @@ export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 export type ClubWithMemberCount = Club & { member_count: number };
 
 // Enriched club type returned by the get_public_clubs RPC.
-// Used on the public discovery page and public club profile.
+// Used on the public discovery page and map view.
 export type ClubWithDiscovery = Pick<
   Club,
   "id" | "slug" | "name" | "description" | "cover_image_url" | "public_status"
 > & {
   district: string | null;
+  skill_levels: string[];
   membership_type: "open" | "application";
   member_count: number;
   upcoming_session_count: number;
   next_session_at: string | null;
+  distance_km: number | null;
 };
 
 export type SessionWithSpots = Session & {

@@ -17,17 +17,27 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { TAIPEI_DISTRICTS } from "@/lib/constants/districts";
+import { SKILL_LEVELS } from "@/lib/constants/skills";
 
 const SORT_OPTIONS = [
-  { value: "newest", label: "最新成立" },
+  { value: "newest",       label: "最新成立" },
   { value: "most_members", label: "最多成員" },
-  { value: "most_active", label: "最活躍" },
+  { value: "most_active",  label: "最活躍" },
+  { value: "nearest",      label: "最近距離" },
 ] as const;
 
 const MEMBERSHIP_OPTIONS = [
-  { value: "", label: "全部" },
-  { value: "open", label: "公開加入" },
+  { value: "",            label: "全部" },
+  { value: "open",        label: "公開加入" },
   { value: "application", label: "需申請" },
+] as const;
+
+const RADIUS_OPTIONS = [
+  { value: "1",  label: "1 km" },
+  { value: "3",  label: "3 km" },
+  { value: "5",  label: "5 km" },
+  { value: "10", label: "10 km" },
+  { value: "20", label: "20 km" },
 ] as const;
 
 function buildUrl(params: Record<string, string>): string {
@@ -40,35 +50,34 @@ function buildUrl(params: Record<string, string>): string {
   return qs ? `/clubs?${qs}` : "/clubs";
 }
 
-export default function ClubFilterBar() {
+type Props = {
+  view: "list" | "map";
+};
+
+export default function ClubFilterBar({ view }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const currentQ = searchParams.get("q") ?? "";
-  const currentDistrict = searchParams.get("district") ?? "";
+  const currentQ          = searchParams.get("q")          ?? "";
+  const currentDistrict   = searchParams.get("district")   ?? "";
   const currentMembership = searchParams.get("membership") ?? "";
-  const currentSort = searchParams.get("sort") ?? "newest";
+  const currentSkill      = searchParams.get("skill")      ?? "";
+  const currentSort       = searchParams.get("sort")       ?? "newest";
+  const currentLat        = searchParams.get("lat")        ?? "";
+  const currentLng        = searchParams.get("lng")        ?? "";
+  const currentRadius     = searchParams.get("radius_km")  ?? "5";
 
-  // Local search state for debouncing only
-  const [searchInput, setSearchInput] = useState(currentQ);
+  const [searchInput, setSearchInput]   = useState(currentQ);
+  const [gpsLoading, setGpsLoading]     = useState(false);
+  const [gpsError, setGpsError]         = useState(false);
 
-  // Sync search input if URL changes externally
-  useEffect(() => {
-    setSearchInput(currentQ);
-  }, [currentQ]);
+  useEffect(() => { setSearchInput(currentQ); }, [currentQ]);
 
-  // Debounce search input → URL push
+  // Debounce search → URL push
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchInput !== currentQ) {
-        router.push(
-          buildUrl({
-            q: searchInput,
-            district: currentDistrict,
-            membership: currentMembership,
-            sort: currentSort,
-          })
-        );
+        push({ q: searchInput });
       }
     }, 300);
     return () => clearTimeout(timer);
@@ -78,19 +87,54 @@ export default function ClubFilterBar() {
     (patch: Record<string, string>) => {
       router.push(
         buildUrl({
-          q: currentQ,
-          district: currentDistrict,
+          q:          currentQ,
+          district:   currentDistrict,
           membership: currentMembership,
-          sort: currentSort,
+          skill:      currentSkill,
+          sort:       currentSort,
+          lat:        currentLat,
+          lng:        currentLng,
+          radius_km:  currentRadius,
+          view:       view,
           ...patch,
         })
       );
     },
-    [router, currentQ, currentDistrict, currentMembership, currentSort]
+    [router, currentQ, currentDistrict, currentMembership, currentSkill,
+     currentSort, currentLat, currentLng, currentRadius, view]
   );
 
-  const activeFilterCount = [currentQ, currentDistrict, currentMembership].filter(Boolean).length;
+  function requestGps() {
+    if (!navigator.geolocation) return;
+    setGpsLoading(true);
+    setGpsError(false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        push({
+          lat: String(pos.coords.latitude.toFixed(6)),
+          lng: String(pos.coords.longitude.toFixed(6)),
+          sort: "nearest",
+        });
+        setGpsLoading(false);
+      },
+      () => {
+        setGpsError(true);
+        setGpsLoading(false);
+      },
+      { timeout: 8000 }
+    );
+  }
 
+  function clearGps() {
+    push({ lat: "", lng: "", sort: currentSort === "nearest" ? "newest" : currentSort });
+  }
+
+  const hasGps     = !!(currentLat && currentLng);
+  const activeFilterCount = [
+    currentQ, currentDistrict, currentMembership, currentSkill, hasGps ? "gps" : "",
+  ].filter(Boolean).length;
+
+  // Reusable filter controls (used in both desktop inline and mobile popover)
   const FilterControls = (
     <div className="flex flex-col gap-3 w-full">
       {/* District */}
@@ -107,6 +151,25 @@ export default function ClubFilterBar() {
             <SelectItem value="__all__">全部地區</SelectItem>
             {TAIPEI_DISTRICTS.map((d) => (
               <SelectItem key={d} value={d}>{d}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Skill level */}
+      <div>
+        <p className="text-xs text-muted-foreground font-medium mb-1.5">技術程度</p>
+        <Select
+          value={currentSkill || "__all__"}
+          onValueChange={(v) => push({ skill: v === "__all__" ? "" : v })}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="全部程度" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">全部程度</SelectItem>
+            {SKILL_LEVELS.map(({ value, label }) => (
+              <SelectItem key={value} value={value}>{label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -130,13 +193,45 @@ export default function ClubFilterBar() {
         </div>
       </div>
 
+      {/* GPS proximity */}
+      <div>
+        <p className="text-xs text-muted-foreground font-medium mb-1.5">距離篩選</p>
+        {hasGps ? (
+          <div className="flex gap-2">
+            <Select
+              value={currentRadius}
+              onValueChange={(v) => push({ radius_km: v })}
+            >
+              <SelectTrigger className="flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RADIUS_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={clearGps} className="shrink-0 text-xs">
+              清除位置
+            </Button>
+          </div>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={requestGps}
+            disabled={gpsLoading}
+            className="w-full text-xs"
+          >
+            {gpsLoading ? "定位中…" : gpsError ? "⚠️ 無法取得位置" : "📍 使用我的位置"}
+          </Button>
+        )}
+      </div>
+
       {/* Sort */}
       <div>
         <p className="text-xs text-muted-foreground font-medium mb-1.5">排序</p>
-        <Select
-          value={currentSort}
-          onValueChange={(v) => push({ sort: v })}
-        >
+        <Select value={currentSort} onValueChange={(v) => push({ sort: v })}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -151,27 +246,55 @@ export default function ClubFilterBar() {
   );
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-      {/* Search input — always visible */}
-      <div className="relative flex-1 w-full">
-        <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-        </svg>
-        <Input
-          className="pl-9"
-          placeholder="搜尋社團名稱…"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-        />
+    <div className="space-y-3">
+      {/* Top row: search + view toggle */}
+      <div className="flex gap-3 items-center">
+        {/* Search */}
+        <div className="relative flex-1">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+          </svg>
+          <Input
+            className="pl-9"
+            placeholder="搜尋社團名稱…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </div>
+
+        {/* View toggle: list / map */}
+        <div className="flex rounded-lg border border-border/60 overflow-hidden shrink-0">
+          <button
+            className={`px-3 py-2 text-xs font-medium transition-colors ${
+              view === "list"
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground hover:bg-secondary"
+            }`}
+            onClick={() => push({ view: "list" })}
+          >
+            ☰ 列表
+          </button>
+          <button
+            className={`px-3 py-2 text-xs font-medium transition-colors border-l border-border/60 ${
+              view === "map"
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground hover:bg-secondary"
+            }`}
+            onClick={() => push({ view: "map" })}
+          >
+            🗺 地圖
+          </button>
+        </div>
       </div>
 
-      {/* Desktop: filters inline */}
+      {/* Second row: desktop inline filters */}
       <div className="hidden sm:flex items-center gap-2 flex-wrap">
         {/* District */}
         <Select
@@ -189,7 +312,23 @@ export default function ClubFilterBar() {
           </SelectContent>
         </Select>
 
-        {/* Membership type toggle */}
+        {/* Skill level */}
+        <Select
+          value={currentSkill || "__all__"}
+          onValueChange={(v) => push({ skill: v === "__all__" ? "" : v })}
+        >
+          <SelectTrigger className="w-28">
+            <SelectValue placeholder="全部程度" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">全部程度</SelectItem>
+            {SKILL_LEVELS.map(({ value, label }) => (
+              <SelectItem key={value} value={value}>{label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Membership toggle */}
         <div className="flex gap-1">
           {MEMBERSHIP_OPTIONS.map(({ value, label }) => (
             <Button
@@ -204,11 +343,40 @@ export default function ClubFilterBar() {
           ))}
         </div>
 
+        {/* GPS */}
+        {hasGps ? (
+          <div className="flex gap-1 items-center">
+            <Select
+              value={currentRadius}
+              onValueChange={(v) => push({ radius_km: v })}
+            >
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RADIUS_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="ghost" onClick={clearGps} className="text-xs text-muted-foreground">
+              × 清除
+            </Button>
+          </div>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={requestGps}
+            disabled={gpsLoading}
+            className="text-xs"
+          >
+            {gpsLoading ? "定位中…" : gpsError ? "⚠️ 失敗" : "📍 附近"}
+          </Button>
+        )}
+
         {/* Sort */}
-        <Select
-          value={currentSort}
-          onValueChange={(v) => push({ sort: v })}
-        >
+        <Select value={currentSort} onValueChange={(v) => push({ sort: v })}>
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
@@ -225,15 +393,15 @@ export default function ClubFilterBar() {
             size="sm"
             variant="ghost"
             className="text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => router.push("/clubs")}
+            onClick={() => router.push(`/clubs${view === "map" ? "?view=map" : ""}`)}
           >
             清除篩選
           </Button>
         )}
       </div>
 
-      {/* Mobile: filter popover */}
-      <div className="flex sm:hidden gap-2 w-full">
+      {/* Mobile popover */}
+      <div className="flex sm:hidden gap-2">
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="flex-1 justify-between">
@@ -255,7 +423,7 @@ export default function ClubFilterBar() {
             size="sm"
             variant="ghost"
             className="text-xs text-muted-foreground"
-            onClick={() => router.push("/clubs")}
+            onClick={() => router.push(`/clubs${view === "map" ? "?view=map" : ""}`)}
           >
             清除
           </Button>

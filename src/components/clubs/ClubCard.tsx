@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getSkillLabel, getSkillColor } from "@/lib/constants/skills";
 import type { ClubWithDiscovery } from "@/types/domain";
 
 type Props = {
@@ -16,6 +17,11 @@ function formatNextSession(isoString: string): string {
   const hour = date.getHours().toString().padStart(2, "0");
   const minute = date.getMinutes().toString().padStart(2, "0");
   return `${day} ${month}/${d} · ${hour}:${minute}`;
+}
+
+function formatDistance(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)} m`;
+  return `${km.toFixed(1)} km`;
 }
 
 export default function ClubCard({ club }: Props) {
@@ -40,16 +46,21 @@ export default function ClubCard({ club }: Props) {
             </div>
           )}
 
-          {/* District badge — bottom-left of cover */}
-          {club.district && (
-            <div className="absolute bottom-3 left-3">
+          {/* Bottom-left: district + distance */}
+          <div className="absolute bottom-3 left-3 flex gap-1.5">
+            {club.district && (
               <Badge variant="secondary" className="bg-background/90 backdrop-blur-md text-foreground border-none shadow-sm text-[10px] font-bold tracking-wide px-2.5 py-0.5">
                 {club.district}
               </Badge>
-            </div>
-          )}
+            )}
+            {club.distance_km != null && (
+              <Badge variant="secondary" className="bg-background/90 backdrop-blur-md text-foreground border-none shadow-sm text-[10px] font-bold tracking-wide px-2.5 py-0.5">
+                📍 {formatDistance(club.distance_km)}
+              </Badge>
+            )}
+          </div>
 
-          {/* Membership type badge — top-right of cover */}
+          {/* Top-right: membership type */}
           <div className="absolute top-3 right-3">
             {club.membership_type === "open" ? (
               <Badge className="bg-accent text-accent-foreground border-none shadow-sm text-[10px] font-bold tracking-wide px-2.5 py-0.5">
@@ -68,10 +79,24 @@ export default function ClubCard({ club }: Props) {
           <h3 className="font-extrabold text-xl leading-tight group-hover:text-primary transition-colors">{club.name}</h3>
         </CardHeader>
 
-        {/* Description + stats */}
+        {/* Description + skill badges + stats */}
         <CardContent className="pb-5 flex-1 flex flex-col justify-between gap-3">
           {club.description && (
             <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">{club.description}</p>
+          )}
+
+          {/* Skill level badges */}
+          {club.skill_levels && club.skill_levels.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {club.skill_levels.map((s) => (
+                <span
+                  key={s}
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getSkillColor(s)}`}
+                >
+                  {getSkillLabel(s)}
+                </span>
+              ))}
+            </div>
           )}
 
           {/* Social proof row */}

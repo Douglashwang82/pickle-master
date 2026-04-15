@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CoverImageUpload from "@/components/clubs/CoverImageUpload";
 import { TAIPEI_DISTRICTS } from "@/lib/constants/districts";
+import { SKILL_LEVELS } from "@/lib/constants/skills";
 import type { Club } from "@/types/domain";
 
 type Props = {
@@ -19,6 +20,9 @@ type Props = {
   > & {
     district?: string | null;
     membership_type?: string | null;
+    skill_levels?: string[] | null;
+    latitude?: number | null;
+    longitude?: number | null;
   };
 };
 
@@ -40,11 +44,40 @@ export default function ClubForm({ club }: Props) {
   const [membershipType, setMembershipType] = useState<"open" | "application">(
     club?.membership_type === "open" ? "open" : "application"
   );
+  const [skillLevels, setSkillLevels] = useState<string[]>(
+    club?.skill_levels ?? []
+  );
+  const [latitude, setLatitude] = useState<string>(
+    club?.latitude != null ? String(club.latitude) : ""
+  );
+  const [longitude, setLongitude] = useState<string>(
+    club?.longitude != null ? String(club.longitude) : ""
+  );
+  const [gpsLoading, setGpsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function toSlug(value: string) {
     return value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  }
+
+  function toggleSkillLevel(value: string) {
+    setSkillLevels((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  }
+
+  function detectLocation() {
+    if (!navigator.geolocation) return;
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(String(pos.coords.latitude.toFixed(6)));
+        setLongitude(String(pos.coords.longitude.toFixed(6)));
+        setGpsLoading(false);
+      },
+      () => setGpsLoading(false)
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -61,6 +94,9 @@ export default function ClubForm({ club }: Props) {
       cover_image_url: coverImageUrl || undefined,
       district: district || undefined,
       membership_type: membershipType,
+      skill_levels: skillLevels,
+      latitude: latitude ? parseFloat(latitude) : undefined,
+      longitude: longitude ? parseFloat(longitude) : undefined,
     };
     const url = isEditing ? `/api/clubs/${club!.id}` : "/api/clubs";
     const method = isEditing ? "PATCH" : "POST";
@@ -191,6 +227,67 @@ export default function ClubForm({ club }: Props) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Skill levels — checkboxes, 2×2 grid */}
+          <div className="space-y-1">
+            <Label>適合程度（可複選）</Label>
+            <p className="text-xs text-muted-foreground">不選擇代表歡迎所有程度</p>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              {SKILL_LEVELS.map(({ value, label, color }) => (
+                <label
+                  key={value}
+                  className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border transition-colors ${
+                    skillLevels.includes(value)
+                      ? "border-primary bg-primary/5"
+                      : "border-border/60 hover:border-primary/30"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={skillLevels.includes(value)}
+                    onChange={() => toggleSkillLevel(value)}
+                    className="accent-primary"
+                  />
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Location */}
+          <div className="space-y-1">
+            <Label>場地座標（用於地圖顯示）</Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="緯度 (lat)"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+                className="flex-1"
+                type="number"
+                step="any"
+              />
+              <Input
+                placeholder="經度 (lng)"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                className="flex-1"
+                type="number"
+                step="any"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={detectLocation}
+                disabled={gpsLoading}
+                className="shrink-0"
+              >
+                {gpsLoading ? "偵測中…" : "📍 使用目前位置"}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-1">

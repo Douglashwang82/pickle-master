@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/db";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,14 @@ import { Plus } from "lucide-react";
 import type { ClubWithDiscovery } from "@/types/domain";
 import { PublicClubsQuerySchema } from "@/lib/validations/clubs";
 
-export const dynamic = "force-dynamic";
+// Map component: client-only (no SSR) — maplibre-gl uses browser APIs
+const ClubMapView = dynamic(
+  () => import("@/components/clubs/ClubMapView"),
+  { ssr: false, loading: () => <div className="h-[520px] rounded-2xl bg-secondary animate-pulse" /> }
+);
+
+export const dynamic_ = "force-dynamic";
+export const revalidate = 0;
 
 const LIMIT = 20;
 
@@ -16,42 +24,64 @@ type SearchParams = {
   q?: string;
   district?: string;
   membership?: string;
+  skill?: string;
+  lat?: string;
+  lng?: string;
+  radius_km?: string;
   sort?: string;
+  view?: string;
   page?: string;
 };
 
-async function fetchClubs(searchParams: SearchParams): Promise<{
+async function fetchClubs(sp: SearchParams): Promise<{
   clubs: ClubWithDiscovery[];
   total: number;
   page: number;
 }> {
   const parsed = PublicClubsQuerySchema.safeParse({
-    q: searchParams.q,
-    district: searchParams.district,
-    membership: searchParams.membership,
-    sort: searchParams.sort,
-    page: searchParams.page,
+    q:         sp.q,
+    district:  sp.district,
+    membership: sp.membership,
+    skill:     sp.skill,
+    lat:       sp.lat,
+    lng:       sp.lng,
+    radius_km: sp.radius_km,
+    sort:      sp.sort,
+    view:      sp.view,
+    page:      sp.page,
   });
 
-  const { q, district, membership, sort, page } = parsed.success
+  const {
+    q, district, membership, skill, lat, lng, radius_km, sort, page,
+  } = parsed.success
     ? parsed.data
-    : { q: undefined, district: undefined, membership: undefined, sort: "newest" as const, page: 1 };
+    : { q: undefined, district: undefined, membership: undefined,
+        skill: undefined, lat: undefined, lng: undefined,
+        radius_km: 5, sort: "newest" as const, page: 1, view: "list" as const };
 
   const offset = (page - 1) * LIMIT;
 
   const [{ data: clubs }, { data: total }] = await Promise.all([
     supabaseAdmin.rpc("get_public_clubs", {
-      p_search: q ?? null,
-      p_district: district ?? null,
+      p_search:     q        ?? null,
+      p_district:   district ?? null,
       p_membership: membership ?? null,
-      p_sort: sort,
-      p_limit: LIMIT,
-      p_offset: offset,
+      p_skill:      skill    ?? null,
+      p_lat:        lat      ?? null,
+      p_lng:        lng      ?? null,
+      p_radius_km:  radius_km,
+      p_sort:       sort,
+      p_limit:      LIMIT,
+      p_offset:     offset,
     }),
     supabaseAdmin.rpc("count_public_clubs", {
-      p_search: q ?? null,
-      p_district: district ?? null,
+      p_search:     q        ?? null,
+      p_district:   district ?? null,
       p_membership: membership ?? null,
+      p_skill:      skill    ?? null,
+      p_lat:        lat      ?? null,
+      p_lng:        lng      ?? null,
+      p_radius_km:  radius_km,
     }),
   ]);
 
@@ -66,15 +96,27 @@ export default async function PublicClubsPage(props: {
   searchParams: Promise<SearchParams>;
 }) {
   const searchParams = await props.searchParams;
+
+  // Resolve view before fetching so we can pass it as a prop
+  const view = searchParams.view === "map" ? "map" : "list";
+
   const { clubs, total, page } = await fetchClubs(searchParams);
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
+  const userLat = searchParams.lat ? parseFloat(searchParams.lat) : undefined;
+  const userLng = searchParams.lng ? parseFloat(searchParams.lng) : undefined;
+
   function pageUrl(p: number) {
     const sp = new URLSearchParams();
-    if (searchParams.q) sp.set("q", searchParams.q);
-    if (searchParams.district) sp.set("district", searchParams.district);
+    if (searchParams.q)          sp.set("q",          searchParams.q);
+    if (searchParams.district)   sp.set("district",   searchParams.district);
     if (searchParams.membership) sp.set("membership", searchParams.membership);
-    if (searchParams.sort) sp.set("sort", searchParams.sort);
+    if (searchParams.skill)      sp.set("skill",      searchParams.skill);
+    if (searchParams.lat)        sp.set("lat",        searchParams.lat);
+    if (searchParams.lng)        sp.set("lng",        searchParams.lng);
+    if (searchParams.radius_km)  sp.set("radius_km",  searchParams.radius_km);
+    if (searchParams.sort)       sp.set("sort",       searchParams.sort);
+    sp.set("view", view);
     sp.set("page", String(p));
     return `/clubs?${sp.toString()}`;
   }
@@ -101,9 +143,9 @@ export default async function PublicClubsPage(props: {
         </Button>
       </div>
 
-      {/* Filter bar (Client Component wrapped in Suspense for useSearchParams) */}
-      <Suspense fallback={null}>
-        <ClubFilterBar />
+      {/* Filter bar (needs useSearchParams → Suspense boundary) */}
+      <Suspense fallback={<div className="h-10 bg-secondary/50 animate-pulse rounded-xl" />}>
+        <ClubFilterBar view={view} />
       </Suspense>
 
       {/* Results count */}
@@ -113,25 +155,40 @@ export default async function PublicClubsPage(props: {
         </p>
       )}
 
-      {/* Club grid */}
-      {clubs.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {clubs.map((club) => (
-            <ClubCard key={club.id} club={club} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20 px-4 mt-8 bg-card rounded-3xl border border-dashed border-border/60">
-          <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Plus className="h-8 w-8 text-primary" />
-          </div>
-          <p className="text-xl font-bold mb-2">找不到符合條件的社團。</p>
-          <p className="text-muted-foreground max-w-sm mx-auto">試試調整篩選條件，或成為第一個在您所在地區創建匹克球社團的人！</p>
-        </div>
+      {/* Map view */}
+      {view === "map" && (
+        <ClubMapView
+          clubs={clubs}
+          userLat={userLat}
+          userLng={userLng}
+        />
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {/* List view */}
+      {view === "list" && (
+        <>
+          {clubs.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {clubs.map((club) => (
+                <ClubCard key={club.id} club={club} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 px-4 mt-8 bg-card rounded-3xl border border-dashed border-border/60">
+              <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Plus className="h-8 w-8 text-primary" />
+              </div>
+              <p className="text-xl font-bold mb-2">找不到符合條件的社團。</p>
+              <p className="text-muted-foreground max-w-sm mx-auto">
+                試試調整篩選條件，或成為第一個在您所在地區創建匹克球社團的人！
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Pagination (list view only) */}
+      {view === "list" && totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-4">
           {page > 1 ? (
             <Button asChild variant="outline" size="sm">
