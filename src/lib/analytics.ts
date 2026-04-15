@@ -9,6 +9,7 @@ type EventName =
   | "payment_failed"
   | "session_cancelled"
   | "membership_applied"
+  | "membership_joined"
   | "membership_approved"
   | "signup_completed"
   | "profile_completed"

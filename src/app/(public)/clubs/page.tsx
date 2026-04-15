@@ -50,7 +50,7 @@ async function fetchClubs(sp: SearchParams): Promise<{
     ? parsed.data
     : { q: undefined, district: undefined, membership: undefined,
         skill: undefined, lat: undefined, lng: undefined,
-        radius_km: 5, sort: "newest" as const, page: 1, view: "list" as const };
+        radius_km: 5, sort: "newest" as const, page: 1 };
 
   const offset = (page - 1) * LIMIT;
 
