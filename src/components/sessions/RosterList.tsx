@@ -79,11 +79,11 @@ export default function RosterList({ sessionId, isLeader }: Props) {
   return (
     <div className="space-y-4">
       <h3 className="font-semibold text-sm">
-        Roster ({confirmed.length} confirmed{pending.length > 0 ? `, ${pending.length} pending` : ""})
+        名單（{confirmed.length} 位已確認{pending.length > 0 ? `，${pending.length} 位待付款` : ""}）
       </h3>
 
       {confirmed.length === 0 && (
-        <p className="text-sm text-muted-foreground">No confirmed participants yet.</p>
+        <p className="text-sm text-muted-foreground">目前尚無確認參加者。</p>
       )}
 
       <div className="space-y-2">
@@ -128,14 +128,14 @@ function PaymentBadge({ payment }: { payment: RegistrationWithPayment["payment"]
   if (payment.status === "succeeded") {
     return (
       <Badge variant="default" className="text-xs bg-green-600 hover:bg-green-600">
-        Paid
+        已付款
       </Badge>
     );
   }
 
   return (
     <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
-      Unpaid · NT${payment.amount_twd}
+      未付 · NT${payment.amount_twd}
     </Badge>
   );
 }
@@ -160,7 +160,7 @@ function RosterRow({
   const isUnpaid = reg.payment?.status === "initiated";
 
   async function handleRemove() {
-    if (!confirm("Remove this participant and issue a refund?")) return;
+    if (!confirm("確定移除此參加者並退款？")) return;
     setRemoving(true);
     await fetch(`/api/sessions/${sessionId}/remove-participant`, {
       method: "POST",
@@ -206,7 +206,7 @@ function RosterRow({
         )}
       </div>
 
-      {isPending && <Badge variant="outline" className="text-xs">Pending</Badge>}
+      {isPending && <Badge variant="outline" className="text-xs">待確認</Badge>}
 
       {!isPending && <PaymentBadge payment={reg.payment} />}
 
@@ -221,7 +221,7 @@ function RosterRow({
                 onClick={handleNotify}
                 disabled={notifying}
               >
-                {notifying ? "Sending…" : "Notify"}
+                {notifying ? "發送中…" : "催繳"}
               </Button>
               <Button
                 size="sm"
@@ -230,7 +230,7 @@ function RosterRow({
                 onClick={handleMarkPaid}
                 disabled={markingPaid}
               >
-                {markingPaid ? "Saving…" : "Mark Paid"}
+                {markingPaid ? "儲存中…" : "標記已付"}
               </Button>
             </>
           )}
@@ -239,7 +239,7 @@ function RosterRow({
             disabled={removing}
             className="text-xs text-destructive hover:underline ml-1"
           >
-            {removing ? "Removing…" : "Remove"}
+            {removing ? "移除中…" : "移除"}
           </button>
         </div>
       )}

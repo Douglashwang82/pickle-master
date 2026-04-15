@@ -33,11 +33,11 @@ export default function CoverImageUpload({ currentUrl, onUpload, onRemove }: Pro
     setError(null);
 
     if (!ACCEPTED.includes(file.type)) {
-      setError("Only JPEG, PNG, WebP, or GIF images are allowed.");
+      setError("僅允許上傳 JPEG、PNG、WebP 或 GIF 格式的圖片。");
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError("Image must be 5 MB or smaller.");
+      setError("圖片大小不得超過 5 MB。");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function CoverImageUpload({ currentUrl, onUpload, onRemove }: Pro
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setError("You must be signed in to upload an image.");
+        setError("您必須登入才能上傳圖片。");
         setPreview(null);
         return;
       }
@@ -66,7 +66,7 @@ export default function CoverImageUpload({ currentUrl, onUpload, onRemove }: Pro
         .upload(path, file, { cacheControl: "3600", upsert: true });
 
       if (uploadError) {
-        setError("Upload failed. Please try again.");
+        setError("上傳失敗，請再試一次。");
         setPreview(null);
         return;
       }
@@ -78,7 +78,7 @@ export default function CoverImageUpload({ currentUrl, onUpload, onRemove }: Pro
       onUpload(publicUrl);
       // Keep preview shown until parent re-renders with new currentUrl
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError("發生錯誤，請再試一次。");
       setPreview(null);
     } finally {
       URL.revokeObjectURL(objectUrl);
@@ -119,8 +119,8 @@ export default function CoverImageUpload({ currentUrl, onUpload, onRemove }: Pro
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <ImageIcon className="h-8 w-8" />
-            <span className="text-sm">Click to upload a cover image</span>
-            <span className="text-xs">JPEG, PNG, WebP or GIF — max 5 MB</span>
+            <span className="text-sm">點擊上傳封面圖片</span>
+            <span className="text-xs">JPEG、PNG、WebP 或 GIF — 最大 5 MB</span>
           </div>
         )}
 
@@ -128,7 +128,7 @@ export default function CoverImageUpload({ currentUrl, onUpload, onRemove }: Pro
         {uploading && (
           <div className="absolute inset-0 bg-background/70 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
-            Uploading…
+            上傳中…
           </div>
         )}
 
@@ -137,7 +137,7 @@ export default function CoverImageUpload({ currentUrl, onUpload, onRemove }: Pro
           <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
             <div className="flex items-center gap-1.5 text-white text-sm font-medium">
               <Upload className="h-4 w-4" />
-              Change image
+              更換圖片
             </div>
           </div>
         )}
@@ -155,7 +155,7 @@ export default function CoverImageUpload({ currentUrl, onUpload, onRemove }: Pro
             className="ml-auto text-muted-foreground hover:text-destructive"
           >
             <X className="h-3.5 w-3.5 mr-1" />
-            Remove
+            移除
           </Button>
         )}
       </div>

@@ -30,17 +30,17 @@ function renderNotification(n: AppNotification): string {
       return `${sender} (${club}): ${msg}`;
     }
     case "membership_approved": {
-      const club = typeof p.club_name === "string" ? p.club_name : "the club";
-      return `Your application to ${club} was approved. Welcome!`;
+      const club = typeof p.club_name === "string" ? p.club_name : "社團";
+      return `您加入「${club}」的申請已通過審核，歡迎加入！`;
     }
     case "payment_reminder": {
-      const title = typeof p.session_title === "string" ? p.session_title : "a session";
+      const title = typeof p.session_title === "string" ? p.session_title : "場次";
       const amt = typeof p.amount_twd === "number" ? `NT$${p.amount_twd}` : "";
-      return `Payment reminder for "${title}"${amt ? `: ${amt} due` : ""}.`;
+      return `「${title}」付款提醒${amt ? `：${amt} 待繳` : ""}。`;
     }
     case "session_reminder_24h": {
-      const title = typeof p.title === "string" ? p.title : "a session";
-      return `Reminder: "${title}" starts in 24 hours.`;
+      const title = typeof p.title === "string" ? p.title : "場次";
+      return `提醒：「${title}」將在 24 小時後開始。`;
     }
     default:
       return n.type.replace(/_/g, " ");
@@ -103,13 +103,13 @@ export default function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between px-4 py-3">
-          <p className="text-sm font-semibold">Notifications</p>
+          <p className="text-sm font-semibold">通知</p>
           {notifications.length > 0 && (
             <button
               onClick={() => fetchNotifications()}
               className="text-xs text-muted-foreground hover:text-primary"
             >
-              Refresh
+              重新整理
             </button>
           )}
         </div>
@@ -117,7 +117,7 @@ export default function NotificationBell() {
         <div className={cn("max-h-80 overflow-y-auto", loading && "opacity-60")}>
           {notifications.length === 0 ? (
             <p className="px-4 py-6 text-sm text-center text-muted-foreground">
-              No notifications yet.
+              目前沒有任何通知。
             </p>
           ) : (
             <ul className="divide-y divide-border">

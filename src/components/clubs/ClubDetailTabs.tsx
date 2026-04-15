@@ -117,7 +117,7 @@ export default function ClubDetailTabs({
           <h1 className="text-2xl font-bold">{club.name}</h1>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="secondary" className="capitalize">{club.sport_type}</Badge>
-            <span className="text-sm text-muted-foreground">{memberCount} members</span>
+            <span className="text-sm text-muted-foreground">{memberCount} 位成員</span>
           </div>
         </div>
         {isLeader && (
@@ -130,10 +130,10 @@ export default function ClubDetailTabs({
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={switchTab}>
         <TabsList className="w-full justify-start">
-          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="sessions">場次</TabsTrigger>
           {isMember && (
             <TabsTrigger value="members" className="gap-1.5">
-              Members
+              成員
               {isLeader && pendingCount > 0 && (
                 <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
                   {pendingCount}
@@ -141,9 +141,9 @@ export default function ClubDetailTabs({
               )}
             </TabsTrigger>
           )}
-          <TabsTrigger value="info">Info</TabsTrigger>
-          {isLeader && <TabsTrigger value="analytics">Analytics</TabsTrigger>}
-          {isLeader && <TabsTrigger value="settings">Settings</TabsTrigger>}
+          <TabsTrigger value="info">資訊</TabsTrigger>
+          {isLeader && <TabsTrigger value="analytics">數據分析</TabsTrigger>}
+          {isLeader && <TabsTrigger value="settings">設定</TabsTrigger>}
         </TabsList>
 
         {/* ── Sessions tab ── */}
@@ -154,12 +154,12 @@ export default function ClubDetailTabs({
                 <SheetTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-1" />
-                    Create Session
+                    建立場次
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
                   <SheetHeader className="mb-4">
-                    <SheetTitle>New Session</SheetTitle>
+                    <SheetTitle>新場次</SheetTitle>
                     <p className="text-sm text-muted-foreground">{club.name}</p>
                   </SheetHeader>
                   <SessionForm
@@ -181,10 +181,10 @@ export default function ClubDetailTabs({
             </div>
           ) : (
             <div className="text-center py-16 text-muted-foreground">
-              <p>No upcoming sessions.</p>
+              <p>暫無即將舉辦的場次。</p>
               {isLeader && (
                 <Button variant="link" onClick={() => setCreateSessionOpen(true)}>
-                  Create one
+                  立即建立
                 </Button>
               )}
             </div>
@@ -197,7 +197,7 @@ export default function ClubDetailTabs({
             {isLeader && pendingCount > 0 && (
               <div className="space-y-3">
                 <h2 className="text-base font-semibold">
-                  Pending Applications ({pendingCount})
+                  待審申請（{pendingCount}）
                 </h2>
                 {applications.map((app) => (
                   <ApplicationReview
@@ -212,7 +212,7 @@ export default function ClubDetailTabs({
 
             <div className="space-y-3">
               <h2 className="text-base font-semibold">
-                Active Members ({members.length})
+                正式成員（{members.length}）
               </h2>
               <div className="space-y-2">
                 {members.map((m) => (
@@ -222,7 +222,7 @@ export default function ClubDetailTabs({
                       <AvatarFallback>{m.profile?.display_name?.[0] ?? "?"}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{m.profile?.display_name ?? "Unknown"}</p>
+                      <p className="font-medium text-sm">{m.profile?.display_name ?? "未知"}</p>
                       {m.profile?.skill_level && (
                         <p className="text-xs text-muted-foreground capitalize">{m.profile.skill_level}</p>
                       )}
@@ -247,14 +247,14 @@ export default function ClubDetailTabs({
             <>
               <Separator />
               <div>
-                <h2 className="font-semibold mb-2">Club Rules</h2>
+                <h2 className="font-semibold mb-2">社團規則</h2>
                 <p className="text-sm text-muted-foreground whitespace-pre-line">{club.rules}</p>
               </div>
             </>
           )}
 
           {!club.description && !club.rules && (
-            <p className="text-muted-foreground text-sm">No info added yet.</p>
+            <p className="text-muted-foreground text-sm">尚未添加任何資訊。</p>
           )}
 
           {!isMember && (
@@ -275,7 +275,7 @@ export default function ClubDetailTabs({
             {analyticsData ? (
               <ClubAnalytics data={analyticsData} />
             ) : (
-              <p className="text-sm text-muted-foreground">Analytics unavailable.</p>
+              <p className="text-sm text-muted-foreground">數據分析暫不可用。</p>
             )}
           </TabsContent>
         )}

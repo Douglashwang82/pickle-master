@@ -45,7 +45,7 @@ export default function ApplicationReview({ application, clubId }: Props) {
             <AvatarFallback>{profile?.display_name?.[0] ?? "?"}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">{profile?.display_name ?? "Unknown"}</p>
+            <p className="font-medium">{profile?.display_name ?? "未知"}</p>
             {profile?.skill_level && (
               <Badge variant="outline" className="text-xs capitalize">
                 {profile.skill_level}
@@ -70,7 +70,7 @@ export default function ApplicationReview({ application, clubId }: Props) {
             onClick={() => handle("approve")}
             disabled={loading !== null}
           >
-            {loading === "approve" ? "Approving…" : "Approve"}
+            {loading === "approve" ? "核准中…" : "核准"}
           </Button>
           <Button
             size="sm"
@@ -78,7 +78,7 @@ export default function ApplicationReview({ application, clubId }: Props) {
             onClick={() => handle("reject")}
             disabled={loading !== null}
           >
-            {loading === "reject" ? "Rejecting…" : "Reject"}
+            {loading === "reject" ? "拒絕中…" : "拒絕"}
           </Button>
         </div>
       </CardContent>

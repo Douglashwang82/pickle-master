@@ -23,9 +23,9 @@ export default function DebtProgressBar({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold">Payment collection</span>
+        <span className="font-semibold">收款狀況</span>
         <span className="text-muted-foreground">
-          {paidCount}/{totalCount} paid
+          {paidCount}/{totalCount} 人已付款
         </span>
       </div>
 
@@ -36,18 +36,18 @@ export default function DebtProgressBar({
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
-          Collected: <span className="text-foreground font-medium">NT${paidAmountTwd.toLocaleString()}</span>
+          已收款：<span className="text-foreground font-medium">NT${paidAmountTwd.toLocaleString()}</span>
         </span>
         {unpaidCount > 0 && (
           <span>
-            Outstanding:{" "}
+            未收款：{" "}
             <span className="text-amber-600 font-medium">
-              NT${unpaidAmount.toLocaleString()} ({unpaidCount} member{unpaidCount !== 1 ? "s" : ""})
+              NT${unpaidAmount.toLocaleString()}（{unpaidCount} 位成員）
             </span>
           </span>
         )}
         {unpaidCount === 0 && totalCount > 0 && (
-          <span className="text-green-600 font-medium">All paid</span>
+          <span className="text-green-600 font-medium">全數付清</span>
         )}
       </div>
     </div>

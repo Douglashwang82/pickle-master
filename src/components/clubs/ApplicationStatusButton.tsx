@@ -23,7 +23,7 @@ export default function ApplicationStatusButton({ clubId, clubSlug, application 
 
   async function handleCancel() {
     if (!application) return;
-    if (!confirm("Are you sure you want to cancel your application?")) return;
+    if (!confirm("確定撤回申請？")) return;
     setLoading(true);
     await fetch(`/api/clubs/${clubId}/applications/${application.id}`, { method: "DELETE" });
     router.refresh();
@@ -33,7 +33,7 @@ export default function ApplicationStatusButton({ clubId, clubSlug, application 
   if (!application) {
     return (
       <Button asChild>
-        <Link href={`/clubs/${clubSlug}/apply`}>Apply to Join</Link>
+        <Link href={`/clubs/${clubSlug}/apply`}>申請加入</Link>
       </Button>
     );
   }
@@ -41,10 +41,10 @@ export default function ApplicationStatusButton({ clubId, clubSlug, application 
   if (application.status === "pending") {
     return (
       <div className="flex items-center gap-2">
-        <Button variant="secondary" disabled>Pending</Button>
+        <Button variant="secondary" disabled>申請審核中</Button>
         <Button variant="outline" onClick={handleCancel} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-          Cancel Request
+          撤回申請
         </Button>
       </div>
     );
@@ -53,8 +53,8 @@ export default function ApplicationStatusButton({ clubId, clubSlug, application 
   if (application.status === "rejected") {
     return (
       <div className="flex flex-col gap-2">
-        <Button variant="destructive" disabled>Rejected</Button>
-        <p className="text-xs text-muted-foreground">You can't apply again at this time.</p>
+        <Button variant="destructive" disabled>申請已拒絕</Button>
+        <p className="text-xs text-muted-foreground">目前您無法再次申請。</p>
       </div>
     );
   }

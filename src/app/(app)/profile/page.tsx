@@ -82,7 +82,7 @@ export default function ProfilePage() {
     if (res.ok) {
       setSuccess(true);
     } else {
-      let errorMsg = "Failed to update profile";
+      let errorMsg = "個人資料更新失敗";
       try {
         const data = await res.json();
         errorMsg = data.error ?? errorMsg;
@@ -109,16 +109,16 @@ export default function ProfilePage() {
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
       <div className="flex flex-col border-b border-border/40 pb-6">
         <div className="inline-block px-3 py-1 mb-3 self-start text-[11px] font-bold uppercase tracking-wider rounded-full bg-accent/20 text-primary">
-          Player Settings
+          球員設定
         </div>
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">{isNew ? "Complete Your Profile" : "Profile"}</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">{isNew ? "完成個人資料" : "個人資料"}</h1>
         {isNew ? (
           <p className="text-muted-foreground text-lg mt-1">
-            Tell other players a bit about yourself.
+            讓其他球員更了解您。
           </p>
         ) : (
           <p className="text-muted-foreground text-lg mt-1">
-            Manage your personal settings and trace your reputation.
+            管理您的個人設定並查看您的聲譽。
           </p>
         )}
       </div>
@@ -127,7 +127,7 @@ export default function ProfilePage() {
         <CardHeader className="bg-secondary/30 pb-4 border-b border-border/40">
           <CardTitle className="text-lg font-bold flex items-center gap-2 tracking-tight">
             <div className="w-2 h-2 rounded-full bg-accent" />
-            Reputation
+            信譽評分
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 space-y-4">
@@ -139,12 +139,12 @@ export default function ProfilePage() {
 
           {profile.peer_reviews && profile.peer_reviews.length > 0 && (
             <div className="mt-8 border-t border-border/40 pt-6 space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Recent Ratings</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">近期評分</h3>
               {profile.peer_reviews.map((review, idx) => (
                 <div key={idx} className="flex justify-between items-start text-sm border border-border/40 bg-card rounded-xl p-4 shadow-sm hover:border-primary/20 transition-colors">
                   <div className="space-y-2">
                     <div className="font-bold text-foreground">
-                      {review.reviewer?.profiles?.display_name || "Anonymous Player"}
+                      {review.reviewer?.profiles?.display_name || "匿名球員"}
                     </div>
                     {review.badges && review.badges.length > 0 && (
                       <div className="flex gap-2 flex-wrap">
@@ -174,7 +174,7 @@ export default function ProfilePage() {
         <CardHeader className="bg-secondary/30 pb-4 border-b border-border/40">
           <CardTitle className="text-lg font-bold flex items-center gap-2 tracking-tight">
             <div className="w-2 h-2 rounded-full bg-primary" />
-            Personal Info
+            個人資訊
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -186,12 +186,12 @@ export default function ProfilePage() {
             )}
             {success && (
               <Alert>
-                <AlertDescription>Profile updated.</AlertDescription>
+                <AlertDescription>個人資料已更新。</AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="display_name" className="font-bold">Display name *</Label>
+              <Label htmlFor="display_name" className="font-bold">顯示名稱 *</Label>
               <Input
                 id="display_name"
                 className="rounded-xl border-border/60 bg-secondary/20 focus-visible:ring-primary shadow-inner h-11"
@@ -202,18 +202,23 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="skill_level" className="font-bold">Skill level</Label>
+              <Label htmlFor="skill_level" className="font-bold">技術程度</Label>
               <Select
                 value={profile.skill_level ?? ""}
                 onValueChange={(v) => setProfile((p) => ({ ...p, skill_level: v }))}
               >
                 <SelectTrigger className="rounded-xl border-border/60 bg-secondary/20 h-11">
-                  <SelectValue placeholder="Select level" />
+                  <SelectValue placeholder="選擇等級" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border/60">
-                  {["beginner", "intermediate", "advanced", "pro"].map((l) => (
-                    <SelectItem key={l} value={l} className="capitalize font-medium">
-                      {l}
+                  {[
+                    { value: "beginner", label: "初學者" },
+                    { value: "intermediate", label: "中級" },
+                    { value: "advanced", label: "進階" },
+                    { value: "pro", label: "職業" },
+                  ].map((l) => (
+                    <SelectItem key={l.value} value={l.value} className="font-medium">
+                      {l.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -221,20 +226,20 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bio" className="font-bold">Bio</Label>
+              <Label htmlFor="bio" className="font-bold">自我介紹</Label>
               <textarea
                 id="bio"
                 value={profile.bio ?? ""}
                 onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
                 className="w-full min-h-[100px] rounded-xl border border-border/60 bg-secondary/20 px-4 py-3 text-sm resize-y focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary shadow-inner"
-                placeholder="A little about yourself…"
+                placeholder="簡單介紹自己…"
                 maxLength={500}
               />
             </div>
 
             <div className="pt-4">
               <Button type="submit" disabled={loading} className="w-full sm:w-auto rounded-full font-bold px-8 h-12 shadow-sm transition-transform active:scale-95">
-                {loading ? "Saving…" : "Save profile"}
+                {loading ? "儲存中…" : "儲存資料"}
               </Button>
             </div>
           </form>

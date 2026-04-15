@@ -56,21 +56,21 @@ export default function ReviewSection({ sessionId, venueId, venueName }: Props) 
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
-              Rate Your Fellow Players
+              評分球友
             </CardTitle>
           </CardHeader>
           <CardContent>
             {hasReviewedAll ? (
               <p className="text-sm text-muted-foreground">
-                You have reviewed all players from this session.
+                您已完成此場次所有球員的評分。
               </p>
             ) : (
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  {unreviewedPlayers.length} player{unreviewedPlayers.length !== 1 ? "s" : ""} to review
+                  尚有 {unreviewedPlayers.length} 位球員待評分
                 </p>
                 <Button size="sm" onClick={() => setPeerModalOpen(true)}>
-                  Rate Players
+                  評分球友
                 </Button>
               </div>
             )}
@@ -83,19 +83,19 @@ export default function ReviewSection({ sessionId, venueId, venueName }: Props) 
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              Rate the Venue
+              評分場地
             </CardTitle>
           </CardHeader>
           <CardContent>
             {hasReviewedVenue ? (
               <p className="text-sm text-muted-foreground">
-                You have already reviewed this venue for this session.
+                您已完成此場次的場地評分。
               </p>
             ) : (
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">{venueName}</p>
                 <Button size="sm" variant="outline" onClick={() => setVenueModalOpen(true)}>
-                  Rate Venue
+                  評分場地
                 </Button>
               </div>
             )}

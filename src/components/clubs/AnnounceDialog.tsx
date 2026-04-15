@@ -55,7 +55,7 @@ export default function AnnounceDialog({ clubId, memberCount }: Props) {
         const errMsg =
           data && typeof data === "object" && "error" in data
             ? String((data as { error: unknown }).error)
-            : "Failed to send announcement";
+            : "公告發送失敗";
         setError(errMsg);
         return;
       }
@@ -66,15 +66,15 @@ export default function AnnounceDialog({ clubId, memberCount }: Props) {
           : 0;
 
       toast({
-        title: "Announcement sent",
+        title: "公告已發送",
         description:
           queued > 0
-            ? `Notified ${queued} member${queued !== 1 ? "s" : ""}.`
-            : "No other members to notify.",
+            ? `已通知 ${queued} 位成員。`
+            : "沒有其他成員需要通知。",
       });
       handleOpen(false);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError("發生錯誤，請再試一次。");
     } finally {
       setLoading(false);
     }
@@ -84,17 +84,17 @@ export default function AnnounceDialog({ clubId, memberCount }: Props) {
     <>
       <Button variant="outline" size="sm" onClick={() => handleOpen(true)}>
         <Megaphone className="h-4 w-4 mr-1.5" />
-        Announce
+        公告
       </Button>
 
       <Dialog open={open} onOpenChange={handleOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Send Announcement</DialogTitle>
+            <DialogTitle>發送公告</DialogTitle>
             <p className="text-sm text-muted-foreground">
               {recipientCount > 0
-                ? `Notifies all ${recipientCount} active member${recipientCount !== 1 ? "s" : ""} in-app.`
-                : "No other members to notify yet."}
+                ? `將以站內訊息通知全部 ${recipientCount} 位在籍成員。`
+                : "目前沒有其他成員可通知。"}
             </p>
           </DialogHeader>
 
@@ -111,7 +111,7 @@ export default function AnnounceDialog({ clubId, memberCount }: Props) {
                 onChange={(e) => setMessage(e.target.value.slice(0, CHAR_LIMIT))}
                 rows={4}
                 disabled={loading}
-                placeholder="Write your announcement…"
+                placeholder="撰寫公告內容…"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-y placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
               />
               <p className="text-xs text-muted-foreground text-right">
@@ -126,7 +126,7 @@ export default function AnnounceDialog({ clubId, memberCount }: Props) {
               onClick={() => handleOpen(false)}
               disabled={loading}
             >
-              Cancel
+              取消
             </Button>
             <Button
               onClick={handleSend}
@@ -135,10 +135,10 @@ export default function AnnounceDialog({ clubId, memberCount }: Props) {
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                  Sending…
+                  發送中…
                 </>
               ) : (
-                `Send to ${recipientCount} Member${recipientCount !== 1 ? "s" : ""}`
+                `發送給 ${recipientCount} 位成員`
               )}
             </Button>
           </div>

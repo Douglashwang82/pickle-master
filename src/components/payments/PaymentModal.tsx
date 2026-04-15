@@ -45,7 +45,7 @@ export default function PaymentModal({ sessionId, fee, open, onOpenChange, onSuc
     setProgress(100);
 
     if (!res.ok) {
-      setError(data.error ?? "Payment failed");
+      setError(data.error ?? "付款失敗");
       setLoading(false);
       setProgress(0);
       return;
@@ -60,11 +60,11 @@ export default function PaymentModal({ sessionId, fee, open, onOpenChange, onSuc
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Confirm Registration</DialogTitle>
+          <DialogTitle>確認報名</DialogTitle>
           <DialogDescription>
             {fee > 0
-              ? `You will be charged NT$${fee} to join this session.`
-              : "This session is free to join."}
+              ? `加入此場次需支付 NT$${fee}。`
+              : "此場次免費參加。"}
           </DialogDescription>
         </DialogHeader>
 
@@ -86,10 +86,10 @@ export default function PaymentModal({ sessionId, fee, open, onOpenChange, onSuc
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancel
+            取消
           </Button>
           <Button onClick={handlePay} disabled={loading}>
-            {loading ? "Processing…" : fee > 0 ? `Pay NT$${fee}` : "Join for free"}
+            {loading ? "處理中…" : fee > 0 ? `支付 NT$${fee}` : "免費加入"}
           </Button>
         </DialogFooter>
       </DialogContent>

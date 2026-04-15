@@ -59,7 +59,7 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? "Failed to create session");
+      setError(data.error ?? "場次建立失敗");
       setLoading(false);
       return;
     }
@@ -79,25 +79,25 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
           )}
 
           <div className="space-y-1">
-            <Label htmlFor="title">Session title *</Label>
+            <Label htmlFor="title">場次名稱 *</Label>
             <Input
               id="title"
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
-              placeholder="Monday Casual"
+              placeholder="週一休閒賽"
               required
             />
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="venue">Venue *</Label>
+            <Label htmlFor="venue">場地 *</Label>
             <Select
               value={form.venue_id}
               onValueChange={(val) => set("venue_id", val)}
               required
             >
               <SelectTrigger id="venue">
-                <SelectValue placeholder="Select a venue" />
+                <SelectValue placeholder="選擇場地" />
               </SelectTrigger>
               <SelectContent>
                 {venues.map((v) => (
@@ -111,7 +111,7 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="start">Start time *</Label>
+              <Label htmlFor="start">開始時間 *</Label>
               <Input
                 id="start"
                 type="datetime-local"
@@ -121,7 +121,7 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="end">End time *</Label>
+              <Label htmlFor="end">結束時間 *</Label>
               <Input
                 id="end"
                 type="datetime-local"
@@ -134,7 +134,7 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="capacity">Capacity *</Label>
+              <Label htmlFor="capacity">人數上限 *</Label>
               <Input
                 id="capacity"
                 type="number"
@@ -146,7 +146,7 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="fee">Fee (NT$)</Label>
+              <Label htmlFor="fee">費用（新台幣）</Label>
               <Input
                 id="fee"
                 type="number"
@@ -158,22 +158,22 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">備註</Label>
             <textarea
               id="notes"
               value={form.notes}
               onChange={(e) => set("notes", e.target.value)}
               className="w-full min-h-[70px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-y"
-              placeholder="Equipment to bring, parking info…"
+              placeholder="攜帶裝備、停車資訊等…"
             />
           </div>
 
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={loading || !form.venue_id}>
-              {loading ? "Creating…" : "Create session"}
+              {loading ? "建立中…" : "建立場次"}
             </Button>
             <Button type="button" variant="outline" onClick={() => onCancel ? onCancel() : router.back()}>
-              Cancel
+              取消
             </Button>
           </div>
         </form>

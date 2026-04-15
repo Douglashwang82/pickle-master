@@ -19,7 +19,7 @@ export default function SessionCard({ session }: Props) {
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-semibold leading-tight">{session.title}</h3>
             <Badge variant={isFull ? "destructive" : "secondary"}>
-              {isFull ? "Full" : `${session.available_spots} spots`}
+              {isFull ? "已額滿" : `${session.available_spots} 個名額`}
             </Badge>
           </div>
         </CardHeader>

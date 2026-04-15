@@ -8,10 +8,10 @@ function formatTWD(amount: number): string {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
+  return new Date(iso).toLocaleDateString("zh-TW", {
     year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
@@ -24,7 +24,7 @@ function MoMBadge({ current, previous }: { current: number; previous: number }) 
       className={`text-xs font-medium ${up ? "text-green-600" : "text-red-500"}`}
     >
       {up ? "+" : ""}
-      {pct}% vs last month
+      {pct}% 較上月
     </span>
   );
 }
@@ -41,13 +41,13 @@ export default function ClubAnalytics({ data }: Props) {
       {/* ── Revenue ── */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Revenue
+          營收
         </h2>
         <div className="grid grid-cols-2 gap-3">
           <Card>
             <CardHeader className="pb-1 pt-4 px-4">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                All-Time
+                歷史總計
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -57,7 +57,7 @@ export default function ClubAnalytics({ data }: Props) {
           <Card>
             <CardHeader className="pb-1 pt-4 px-4">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                This Month
+                本月
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-1">
@@ -76,13 +76,13 @@ export default function ClubAnalytics({ data }: Props) {
       {/* ── Sessions ── */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Sessions
+          場次
         </h2>
         <div className="grid grid-cols-2 gap-3">
           <Card>
             <CardHeader className="pb-1 pt-4 px-4">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Held
+                已舉辦
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -92,7 +92,7 @@ export default function ClubAnalytics({ data }: Props) {
           <Card>
             <CardHeader className="pb-1 pt-4 px-4">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Upcoming
+                即將到來
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -106,7 +106,7 @@ export default function ClubAnalytics({ data }: Props) {
             <CardHeader className="pb-2 pt-4 px-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xs font-medium text-muted-foreground">
-                  Avg Fill Rate
+                  平均入場率
                 </CardTitle>
                 <span className="text-sm font-bold">{sessions.avg_fill_rate}%</span>
               </div>
@@ -115,8 +115,7 @@ export default function ClubAnalytics({ data }: Props) {
               <Progress value={sessions.avg_fill_rate} className="h-2" />
               {sessions.cancelled_count > 0 && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  {sessions.cancelled_count} session
-                  {sessions.cancelled_count !== 1 ? "s" : ""} cancelled all-time
+                  歷史取消場次：{sessions.cancelled_count} 場
                 </p>
               )}
             </CardContent>
@@ -129,13 +128,13 @@ export default function ClubAnalytics({ data }: Props) {
       {/* ── Members ── */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Members
+          成員
         </h2>
         <div className="grid grid-cols-2 gap-3">
           <Card>
             <CardHeader className="pb-1 pt-4 px-4">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Active
+                在籍
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -145,7 +144,7 @@ export default function ClubAnalytics({ data }: Props) {
           <Card>
             <CardHeader className="pb-1 pt-4 px-4">
               <CardTitle className="text-xs font-medium text-muted-foreground">
-                Joined This Month
+                本月加入
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -155,8 +154,7 @@ export default function ClubAnalytics({ data }: Props) {
         </div>
         {members.pending_applications > 0 && (
           <p className="text-sm text-muted-foreground">
-            {members.pending_applications} pending application
-            {members.pending_applications !== 1 ? "s" : ""} awaiting review
+            {members.pending_applications} 個申請等待審核
           </p>
         )}
       </section>
@@ -167,7 +165,7 @@ export default function ClubAnalytics({ data }: Props) {
           <Separator />
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Recent Sessions
+              近期場次
             </h2>
             <div className="space-y-2">
               {recent_sessions.map((s) => {
@@ -194,9 +192,9 @@ export default function ClubAnalytics({ data }: Props) {
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <span>
-                            {s.confirmed_count} / {s.capacity} players
+                            {s.confirmed_count} / {s.capacity} 名球員
                           </span>
-                          <span>{fillPct}% filled</span>
+                          <span>{fillPct}% 入場</span>
                         </div>
                         <Progress value={fillPct} className="h-1.5" />
                       </div>
@@ -212,7 +210,7 @@ export default function ClubAnalytics({ data }: Props) {
       {/* Empty state */}
       {sessions.total_held === 0 && recent_sessions.length === 0 && (
         <div className="text-center py-8 text-muted-foreground text-sm">
-          Analytics will appear once your first session is completed.
+          完成第一場場次後，數據分析將顯示於此。
         </div>
       )}
     </div>

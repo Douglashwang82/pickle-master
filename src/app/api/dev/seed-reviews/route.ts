@@ -7,9 +7,9 @@ export async function POST() {
     let { data: venue } = await supabaseAdmin.from("venues").select("*").limit(1).single();
     if (!venue) {
       const { data: newVenue, error: venueError } = await supabaseAdmin.from("venues").insert({
-        name: "Test Arena",
-        address: "123 Test St",
-        city: "Test City",
+        name: "測試場館",
+        address: "台北市測試路123號",
+        city: "台北市",
         courts_count: 4,
         indoor: true
       }).select().single();
@@ -31,7 +31,7 @@ export async function POST() {
       // Create profile
       await supabaseAdmin.from("profiles").insert({
         user_id: dummyAppUser.id,
-        display_name: "Dummy Player",
+        display_name: "測試球員",
         reputation_score: 5,
         review_count: 1
       });

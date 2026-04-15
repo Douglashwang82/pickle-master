@@ -124,8 +124,8 @@ export default async function SessionDetailPage({ params }: Params) {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Users className="h-4 w-4" />
           <span>
-            {confirmedCount}/{session.capacity} confirmed
-            {availableSpots > 0 && ` · ${availableSpots} spots left`}
+            {confirmedCount}/{session.capacity} 人已確認
+            {availableSpots > 0 && ` · 剩餘 ${availableSpots} 個名額`}
           </span>
         </div>
         {session.fee_twd > 0 && (
@@ -166,7 +166,7 @@ export default async function SessionDetailPage({ params }: Params) {
           )}
           {myReg && (
             <Badge variant="secondary">
-              {myReg.status === "confirmed" ? "You are registered" : "Payment pending"}
+              {myReg.status === "confirmed" ? "您已報名" : "付款待確認"}
             </Badge>
           )}
           {isLeader && (session.status === "published" || session.status === "full") && (

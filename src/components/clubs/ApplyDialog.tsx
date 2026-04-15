@@ -45,7 +45,7 @@ export default function ApplyDialog({ clubId, clubSlug, currentApplication }: Pr
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? "Failed to submit application");
+      setError(data.error ?? "申請提交失敗");
       setLoading(false);
       return;
     }
@@ -57,7 +57,7 @@ export default function ApplyDialog({ clubId, clubSlug, currentApplication }: Pr
 
   async function handleCancel() {
     if (!currentApplication) return;
-    if (!confirm("Cancel your application?")) return;
+    if (!confirm("確定撤回申請？")) return;
     setCancelLoading(true);
     await fetch(`/api/clubs/${clubId}/applications/${currentApplication.id}`, { method: "DELETE" });
     router.refresh();
@@ -68,10 +68,10 @@ export default function ApplyDialog({ clubId, clubSlug, currentApplication }: Pr
   if (currentApplication?.status === "pending") {
     return (
       <div className="flex items-center gap-2">
-        <Button variant="secondary" disabled>Application Pending</Button>
+        <Button variant="secondary" disabled>申請審核中</Button>
         <Button variant="outline" onClick={handleCancel} disabled={cancelLoading}>
           {cancelLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          Withdraw
+          撤回申請
         </Button>
       </div>
     );
@@ -80,8 +80,8 @@ export default function ApplyDialog({ clubId, clubSlug, currentApplication }: Pr
   if (currentApplication?.status === "rejected") {
     return (
       <div className="space-y-1">
-        <Button variant="destructive" disabled>Application Rejected</Button>
-        <p className="text-xs text-muted-foreground">You can&apos;t apply again at this time.</p>
+        <Button variant="destructive" disabled>申請已拒絕</Button>
+        <p className="text-xs text-muted-foreground">目前您無法再次申請。</p>
       </div>
     );
   }
@@ -89,22 +89,22 @@ export default function ApplyDialog({ clubId, clubSlug, currentApplication }: Pr
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setSubmitted(false); setError(null); } }}>
       <DialogTrigger asChild>
-        <Button>Apply to Join</Button>
+        <Button>申請加入</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Apply to Join</DialogTitle>
+          <DialogTitle>申請加入</DialogTitle>
         </DialogHeader>
 
         {submitted ? (
           <div className="space-y-4 py-2">
             <Alert>
               <AlertDescription>
-                Application submitted! The club leader will review it and get back to you.
+                申請已送出！社團會長將審核您的申請並回覆您。
               </AlertDescription>
             </Alert>
             <Button variant="outline" className="w-full" onClick={() => setOpen(false)}>
-              Close
+              關閉
             </Button>
           </div>
         ) : (
@@ -115,22 +115,22 @@ export default function ApplyDialog({ clubId, clubSlug, currentApplication }: Pr
               </Alert>
             )}
             <div className="space-y-1">
-              <Label htmlFor="intro">Tell the leader about yourself (optional)</Label>
+              <Label htmlFor="intro">向會長介紹您自己（選填）</Label>
               <textarea
                 id="intro"
                 value={introMessage}
                 onChange={(e) => setIntroMessage(e.target.value)}
                 className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-y"
-                placeholder="Why do you want to join? What's your skill level?"
+                placeholder="您為什麼想加入？您的技術程度如何？"
                 maxLength={500}
               />
             </div>
             <div className="flex gap-3">
               <Button type="submit" disabled={loading}>
-                {loading ? "Submitting…" : "Submit application"}
+                {loading ? "提交中…" : "提交申請"}
               </Button>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
+                取消
               </Button>
             </div>
           </form>
