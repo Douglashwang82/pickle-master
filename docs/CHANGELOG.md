@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0] — 2026-04-15
+
+### Added — Guest Browse: Public Clubs & Sessions
+
+- **Public club detail** (`/clubs/[slug]`): moved from the auth-gated `(app)` route group to the `(public)` group. Guests see club info, description, rules, and upcoming session list without logging in.
+- **Public session detail** (`/sessions/[sessionId]`): moved to the `(public)` route group. Guests see full session details (time, location, capacity, fee, notes) without logging in. Roster is hidden until authenticated.
+- **Public sessions browse page** (`/sessions`): new page listing all upcoming published/full sessions across all active clubs with keyword search and pagination.
+- **`PublicSessionSearch` component**: search bar client component (uses `useSearchParams`) for the sessions browse page.
+- **Auth-gated actions**: `JoinButton` and `ApplyDialog` now accept an `isAuthenticated` prop. When `false`, both buttons redirect to `/login?next=<return-url>` instead of triggering their respective flows.
+- **Auth-aware public layout**: `(public)/layout.tsx` now checks the Supabase session server-side. Authenticated users see a "我的儀表板" link; guests see "登入 / 開始使用". Public nav also includes "瀏覽場次" and "探索社團" links.
+
 ## [0.2.0] — 2026-04-05
 
 ### Added — Member Debt Tracking

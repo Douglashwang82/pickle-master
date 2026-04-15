@@ -69,6 +69,7 @@ type Props = {
   initialTab: string;
   isLeader: boolean;
   isMember: boolean;
+  isAuthenticated: boolean;
   memberCount: number;
   sessions: SessionWithSpots[];
   members: MemberRow[];
@@ -83,6 +84,7 @@ export default function ClubDetailTabs({
   initialTab,
   isLeader,
   isMember,
+  isAuthenticated,
   memberCount,
   sessions,
   members,
@@ -264,6 +266,7 @@ export default function ClubDetailTabs({
                 clubId={club.id}
                 clubSlug={club.slug}
                 currentApplication={currentApplication}
+                isAuthenticated={isAuthenticated}
               />
             </>
           )}

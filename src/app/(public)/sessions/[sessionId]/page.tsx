@@ -1,10 +1,12 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { MapPin, Users, Calendar } from "lucide-react";
+import { MapPin, Users, Calendar, ArrowLeft } from "lucide-react";
 import RosterList from "@/components/sessions/RosterList";
 import JoinButton from "@/components/sessions/JoinButton";
 import CancelSessionButton from "@/components/sessions/CancelSessionButton";
@@ -19,36 +21,43 @@ export default async function SessionDetailPage({ params }: Params) {
   const { sessionId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
-  const { data: appUser } = await supabaseAdmin
-    .from("users").select("id").eq("auth_provider_user_id", user.id).single();
-  if (!appUser) redirect("/login");
-
-  const { data: session, error: sessionError } = await supabaseAdmin
+  const { data: session } = await supabaseAdmin
     .from("sessions")
     .select("*, clubs(id, slug, name, owner_user_id)")
     .eq("id", sessionId)
     .maybeSingle();
 
-  console.log('DEBUG: SessionDetailPage session fetch', { sessionId, session: session ? 'FOUND' : 'NULL', error: sessionError });
-
   if (!session) notFound();
 
   const club = session.clubs as { id: string; slug: string; name: string; owner_user_id: string } | null;
-  const venue = null; // Venues relationship does not exist on sessions table
   if (!club) notFound();
 
-  // Membership check
-  const { data: membership } = await supabaseAdmin
-    .from("club_memberships").select("role, status")
-    .eq("club_id", club.id).eq("user_id", appUser.id).single();
+  const isAuthenticated = !!user;
 
-  if (membership?.status !== "active" && club.owner_user_id !== appUser.id) redirect(`/clubs/${club.slug}`);
+  // Resolve app-level user
+  let appUserId: string | null = null;
+  if (user) {
+    const { data: appUser } = await supabaseAdmin
+      .from("users").select("id").eq("auth_provider_user_id", user.id).single();
+    if (appUser) appUserId = appUser.id;
+  }
 
-  const isLeader = (membership?.role === "leader" && membership?.status === "active") || club.owner_user_id === appUser.id;
+  // Membership check (only for authenticated users)
+  let membership: { role: string; status: string } | null = null;
+  let isMember = false;
+  let isLeader = false;
 
-  // Count confirmed
+  if (appUserId) {
+    const { data: mem } = await supabaseAdmin
+      .from("club_memberships").select("role, status")
+      .eq("club_id", club.id).eq("user_id", appUserId).single();
+    membership = mem;
+    isMember = membership?.status === "active" || club.owner_user_id === appUserId;
+    isLeader = (membership?.role === "leader" && membership?.status === "active") || club.owner_user_id === appUserId;
+  }
+
+  // Count confirmed registrations
   const { count } = await supabaseAdmin
     .from("session_registrations")
     .select("*", { count: "exact", head: true })
@@ -59,15 +68,19 @@ export default async function SessionDetailPage({ params }: Params) {
   const availableSpots = session.capacity - confirmedCount;
 
   // Check if current user is already registered
-  const { data: myReg } = await supabaseAdmin
-    .from("session_registrations")
-    .select("id, status")
-    .eq("session_id", sessionId)
-    .eq("user_id", appUser.id)
-    .in("status", ["confirmed", "payment_pending"])
-    .single();
+  let myReg: { id: string; status: string } | null = null;
+  if (appUserId) {
+    const { data } = await supabaseAdmin
+      .from("session_registrations")
+      .select("id, status")
+      .eq("session_id", sessionId)
+      .eq("user_id", appUserId)
+      .in("status", ["confirmed", "payment_pending"])
+      .single();
+    myReg = data;
+  }
 
-  // Fetch payment stats for leaders (debt progress bar)
+  // Fetch payment stats for leaders
   let debtStats: { paidCount: number; totalCount: number; totalAmountTwd: number; paidAmountTwd: number } | null = null;
   if (isLeader && session.fee_twd > 0) {
     const { data: payments } = await supabaseAdmin
@@ -89,6 +102,15 @@ export default async function SessionDetailPage({ params }: Params) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* Back to club link */}
+      <Link
+        href={`/clubs/${club.slug}`}
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        {club.name}
+      </Link>
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">{session.title}</h1>
@@ -157,11 +179,33 @@ export default async function SessionDetailPage({ params }: Params) {
       {/* Actions */}
       {session.status !== "cancelled" && (
         <div className="flex flex-wrap gap-3">
-          {!myReg && session.status !== "auto_closed" && session.status !== "completed" && (
+          {/* Guest: show login-to-join button */}
+          {!isAuthenticated && session.status !== "auto_closed" && session.status !== "completed" && (
             <JoinButton
               sessionId={sessionId}
               fee={session.fee_twd}
               isFull={availableSpots <= 0}
+              isAuthenticated={false}
+            />
+          )}
+
+          {/* Authenticated non-member: prompt to join the club first */}
+          {isAuthenticated && !isMember && session.status !== "auto_closed" && session.status !== "completed" && (
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-muted-foreground">您需要先成為社團成員才能報名場次。</p>
+              <Button asChild variant="outline">
+                <Link href={`/clubs/${club.slug}?tab=info`}>加入社團</Link>
+              </Button>
+            </div>
+          )}
+
+          {/* Member: show normal join/registered state */}
+          {isMember && !myReg && session.status !== "auto_closed" && session.status !== "completed" && (
+            <JoinButton
+              sessionId={sessionId}
+              fee={session.fee_twd}
+              isFull={availableSpots <= 0}
+              isAuthenticated={true}
             />
           )}
           {myReg && (
@@ -175,11 +219,22 @@ export default async function SessionDetailPage({ params }: Params) {
         </div>
       )}
 
-      <Separator />
+      {/* Roster — visible to members only */}
+      {isMember ? (
+        <>
+          <Separator />
+          <RosterList sessionId={sessionId} isLeader={isLeader} />
+        </>
+      ) : (
+        <>
+          <Separator />
+          <div className="text-sm text-muted-foreground py-4 text-center">
+            成為社團成員後即可查看報名名單。
+          </div>
+        </>
+      )}
 
-      <RosterList sessionId={sessionId} isLeader={isLeader} />
-
-      {(session.status === "completed" || session.status === "auto_closed") && !isLeader && (
+      {(session.status === "completed" || session.status === "auto_closed") && isMember && !isLeader && (
         <>
           <Separator />
           <ReviewSection

@@ -9,9 +9,10 @@ type Props = {
   sessionId: string;
   fee: number;
   isFull: boolean;
+  isAuthenticated?: boolean;
 };
 
-export default function JoinButton({ sessionId, fee, isFull }: Props) {
+export default function JoinButton({ sessionId, fee, isFull, isAuthenticated = true }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -24,6 +25,14 @@ export default function JoinButton({ sessionId, fee, isFull }: Props) {
     return (
       <Button disabled variant="secondary">
         名額已滿
+      </Button>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Button onClick={() => router.push(`/login?next=/sessions/${sessionId}`)}>
+        {fee > 0 ? `登入以加入 · NT$${fee}` : "登入以加入"}
       </Button>
     );
   }

@@ -14,7 +14,7 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Fetch club
+  // Fetch club (public — no auth required)
   const { data: club } = await supabaseAdmin
     .from("clubs")
     .select("*")
@@ -31,7 +31,7 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
     .eq("club_id", club.id)
     .eq("status", "active");
 
-  // Resolve current user
+  // Resolve current user (optional — guests see a read-only view)
   let appUserId: string | null = null;
   let currentMembership: { role: string; status: string } | null = null;
   let currentApplication: { id: string; status: string } | null = null;
@@ -72,12 +72,13 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
     (currentMembership?.role === "leader" && currentMembership?.status === "active") ||
     club.owner_user_id === appUserId;
   const isMember = currentMembership?.status === "active" || club.owner_user_id === appUserId;
+  const isAuthenticated = !!user;
 
-  // Determine default tab: members see Sessions; non-members see Info
+  // Default tab: members see Sessions; non-members/guests see Info
   const validTabs = ["sessions", "members", "info", "analytics", "settings"];
   const initialTab = tab && validTabs.includes(tab) ? tab : isMember ? "sessions" : "info";
 
-  // Sessions (for Sessions tab)
+  // Sessions (for Sessions tab — visible to all)
   const { data: sessions } = await supabaseAdmin
     .from("sessions")
     .select("*")
@@ -106,7 +107,7 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
     available_spots: s.capacity - (countMap[s.id] ?? 0),
   }));
 
-  // Members + applications (for Members tab)
+  // Members + applications (only for active members)
   const { data: membersRaw } = isMember
     ? await supabaseAdmin
         .from("club_memberships")
@@ -152,7 +153,7 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
     profiles: profileMap[a.user_id] ?? null,
   }));
 
-  // Analytics data (for Analytics tab, leaders only)
+  // Analytics data (leaders only)
   let analyticsData: ClubAnalyticsData | null = null;
   if (isLeader) {
     const now = new Date();
@@ -288,7 +289,7 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
     };
   }
 
-  // Venues (for Create Session sheet)
+  // Venues (for Create Session sheet — leaders only)
   const { data: venuesRaw } = await supabaseAdmin
     .from("venues" as any)
     .select("id, name, district")
@@ -312,6 +313,7 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
       initialTab={initialTab}
       isLeader={isLeader}
       isMember={isMember}
+      isAuthenticated={isAuthenticated}
       memberCount={memberCount ?? 0}
       sessions={sessionsWithSpots}
       members={members}
