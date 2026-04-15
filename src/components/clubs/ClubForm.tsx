@@ -63,7 +63,7 @@ export default function ClubForm({ club }: Props) {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? "Something went wrong");
+      setError(data.error ?? "發生錯誤");
       setLoading(false);
       return;
     }
@@ -84,7 +84,7 @@ export default function ClubForm({ club }: Props) {
 
           {/* Cover image */}
           <div className="space-y-1">
-            <Label>Cover image</Label>
+            <Label>封面圖片</Label>
             <CoverImageUpload
               currentUrl={coverImageUrl || null}
               onUpload={(url) => setCoverImageUrl(url)}
@@ -93,7 +93,7 @@ export default function ClubForm({ club }: Props) {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="name">Club name *</Label>
+            <Label htmlFor="name">社團名稱 *</Label>
             <Input
               id="name"
               value={name}
@@ -101,14 +101,14 @@ export default function ClubForm({ club }: Props) {
                 setName(e.target.value);
                 if (!isEditing) setSlug(toSlug(e.target.value));
               }}
-              placeholder="My Pickleball Club"
+              placeholder="我的匹克球社團"
               required
             />
           </div>
 
           {!isEditing && (
             <div className="space-y-1">
-              <Label htmlFor="slug">URL slug *</Label>
+              <Label htmlFor="slug">網址代碼 *</Label>
               <Input
                 id="slug"
                 value={slug}
@@ -116,7 +116,7 @@ export default function ClubForm({ club }: Props) {
                 placeholder="my-pickleball-club"
                 required
                 pattern="[a-z0-9-]{3,50}"
-                title="3–50 lowercase letters, numbers, hyphens"
+                title="3–50 個小寫字母、數字或連字號"
               />
               <p className="text-xs text-muted-foreground">
                 picklemaster.app/clubs/{slug || "…"}
@@ -125,31 +125,34 @@ export default function ClubForm({ club }: Props) {
           )}
 
           <div className="space-y-1">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">描述</Label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-y"
-              placeholder="Tell players about your club…"
+              placeholder="介紹您的社團…"
             />
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="rules">Club rules</Label>
+            <Label htmlFor="rules">社團規則</Label>
             <textarea
               id="rules"
               value={rules}
               onChange={(e) => setRules(e.target.value)}
               className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-y"
-              placeholder="House rules, skill requirements, etc."
+              placeholder="場地規則、技術要求等。"
             />
           </div>
 
           <div className="space-y-1">
-            <Label>Visibility</Label>
+            <Label>公開設定</Label>
             <div className="flex gap-3">
-              {(["public", "private"] as const).map((val) => (
+              {([
+                { value: "public", label: "公開" },
+                { value: "private", label: "私人" },
+              ] as const).map(({ value: val, label }) => (
                 <label key={val} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
@@ -159,7 +162,7 @@ export default function ClubForm({ club }: Props) {
                     onChange={() => setPublicStatus(val)}
                     className="accent-primary"
                   />
-                  <span className="text-sm capitalize">{val}</span>
+                  <span className="text-sm">{label}</span>
                 </label>
               ))}
             </div>
@@ -167,10 +170,10 @@ export default function ClubForm({ club }: Props) {
 
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving…" : isEditing ? "Save changes" : "Create club"}
+              {loading ? "儲存中…" : isEditing ? "儲存變更" : "創建社團"}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.back()}>
-              Cancel
+              取消
             </Button>
           </div>
         </form>

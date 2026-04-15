@@ -56,7 +56,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">My Sessions</h1>
+      <h1 className="text-2xl font-bold">我的場次</h1>
 
       {registrations && registrations.length > 0 ? (
         <div className="space-y-3">
@@ -90,7 +90,7 @@ export default async function DashboardPage() {
                   <p>{session.location_name}</p>
                   {session.fee_twd > 0 && <p>NT${session.fee_twd}</p>}
                   <Button variant="outline" size="sm" asChild className="mt-2">
-                    <Link href={`/sessions/${session.id}`}>View session</Link>
+                    <Link href={`/sessions/${session.id}`}>查看場次</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -99,9 +99,9 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <div className="text-center py-16 text-muted-foreground">
-          <p>No upcoming sessions.</p>
+          <p>尚無即將到來的場次。</p>
           <Button variant="link" asChild>
-            <Link href="/clubs">Browse clubs</Link>
+            <Link href="/clubs">瀏覽社團</Link>
           </Button>
         </div>
       )}

@@ -14,7 +14,7 @@ export default function ReputationDisplay({
 }: Props) {
   if (reviewCount === 0) {
     return (
-      <p className="text-sm text-muted-foreground">No reviews yet.</p>
+      <p className="text-sm text-muted-foreground">尚無評分記錄。</p>
     );
   }
 
@@ -26,7 +26,7 @@ export default function ReputationDisplay({
           {reputationScore?.toFixed(1) ?? "—"}
         </span>
         <span className="text-xs text-muted-foreground">
-          ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
+          ({reviewCount} 則評分)
         </span>
       </div>
 

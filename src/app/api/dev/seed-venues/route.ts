@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const venues = [
-    { name: "Xinyi Sports Center", district: "Xinyi District", address: "No. 100, Songqin St, Xinyi District, Taipei City, Taiwan 110" },
-    { name: "Daan Sports Center", district: "Daan District", address: "No. 55, Section 3, Xinsheng S Rd, Da’an District, Taipei City, Taiwan 106" },
-    { name: "Neihu Pickleball Court", district: "Neihu District", address: "No. 12, Zhouzi St, Neihu District, Taipei City, Taiwan 114" },
-    { name: "Zhongshan Sports Center", district: "Zhongshan District", address: "No. 2, Lane 44, Section 2, Zhongshan N Rd, Zhongshan District, Taipei City, Taiwan 10491" },
+    { name: "信義運動中心", district: "信義區", address: "台北市信義區松勤街100號" },
+    { name: "大安運動中心", district: "大安區", address: "台北市大安區新生南路三段55號" },
+    { name: "內湖匹克球場", district: "內湖區", address: "台北市內湖區洲子街12號" },
+    { name: "中山運動中心", district: "中山區", address: "台北市中山區中山北路二段44巷2號" },
   ];
 
   for (const venue of venues) {

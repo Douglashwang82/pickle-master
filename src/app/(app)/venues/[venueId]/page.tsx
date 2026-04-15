@@ -136,7 +136,7 @@ export default async function VenueDetailPage({ params }: Params) {
           <h1 className="text-3xl font-bold">{venue.name}</h1>
           <div className="flex items-center gap-2 mt-2 text-muted-foreground">
             {venue.district && <MapPin className="w-4 h-4" />}
-            <span>{venue.district || "Location"}</span>
+            <span>{venue.district || "位置"}</span>
             {venue.address && <span>• {venue.address}</span>}
           </div>
           
@@ -151,10 +151,10 @@ export default async function VenueDetailPage({ params }: Params) {
             {venue.avg_rating !== null ? (
               <span className="font-medium">{venue.avg_rating.toFixed(1)}</span>
             ) : (
-              <span className="text-muted-foreground text-sm">No ratings yet</span>
+              <span className="text-muted-foreground text-sm">尚無評分</span>
             )}
             <span className="text-muted-foreground text-sm">
-              ({venue.review_count} {venue.review_count === 1 ? "review" : "reviews"})
+              ({venue.review_count} 則評論)
             </span>
           </div>
         </div>
@@ -182,16 +182,16 @@ export default async function VenueDetailPage({ params }: Params) {
         ) : (
           <div className="flex flex-col items-center text-muted-foreground gap-2">
             <Map className="w-8 h-8" />
-            <p>No address provided for map</p>
+            <p>未提供地圖地址</p>
           </div>
         )}
       </div>
 
       {/* Reviews Section */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold border-b pb-2">Player Reviews</h2>
+        <h2 className="text-xl font-semibold border-b pb-2">球員評價</h2>
         {reviews.length === 0 ? (
-          <p className="text-muted-foreground py-4">No reviews for this venue yet.</p>
+          <p className="text-muted-foreground py-4">此場地目前尚無評價。</p>
         ) : (
           <div className="space-y-4">
             {reviews.map((review: any) => (

@@ -23,7 +23,7 @@ export default function JoinButton({ sessionId, fee, isFull }: Props) {
   if (isFull) {
     return (
       <Button disabled variant="secondary">
-        Session Full
+        名額已滿
       </Button>
     );
   }
@@ -31,7 +31,7 @@ export default function JoinButton({ sessionId, fee, isFull }: Props) {
   return (
     <>
       <Button onClick={() => setOpen(true)}>
-        {fee > 0 ? `Join · NT$${fee}` : "Join (Free)"}
+        {fee > 0 ? `加入 · NT$${fee}` : "免費加入"}
       </Button>
       <PaymentModal
         sessionId={sessionId}

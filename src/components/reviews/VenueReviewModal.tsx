@@ -29,10 +29,10 @@ type Props = {
 };
 
 const DIMENSIONS: { key: keyof Ratings; label: string }[] = [
-  { key: "facilities_rating", label: "設施品質 Facilities" },
-  { key: "lighting_rating",   label: "燈光照明 Lighting" },
-  { key: "floor_rating",      label: "地面狀況 Court Surface" },
-  { key: "transport_rating",  label: "交通便利性 Transport" },
+  { key: "facilities_rating", label: "設施品質" },
+  { key: "lighting_rating",   label: "燈光照明" },
+  { key: "floor_rating",      label: "地面狀況" },
+  { key: "transport_rating",  label: "交通便利性" },
 ];
 
 export default function VenueReviewModal({
@@ -72,7 +72,7 @@ export default function VenueReviewModal({
       onOpenChange(false);
     } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to submit review. Please try again.");
+      setError(data.error ?? "評分提交失敗，請再試一次。");
     }
     setSubmitting(false);
   }
@@ -81,7 +81,7 @@ export default function VenueReviewModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Rate the Venue</DialogTitle>
+          <DialogTitle>評分場地</DialogTitle>
           <p className="text-sm text-muted-foreground">{venueName}</p>
         </DialogHeader>
 
@@ -99,7 +99,7 @@ export default function VenueReviewModal({
 
           <div className="space-y-1">
             <Label htmlFor="venue-comment" className="text-sm">
-              Comment (optional)
+              評論（選填）
             </Label>
             <textarea
               id="venue-comment"
@@ -107,7 +107,7 @@ export default function VenueReviewModal({
               onChange={(e) => setComment(e.target.value)}
               maxLength={500}
               rows={3}
-              placeholder="Share your experience…"
+              placeholder="分享您的使用感受…"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
             />
             <p className="text-xs text-muted-foreground text-right">
@@ -120,10 +120,10 @@ export default function VenueReviewModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
-            Cancel
+            取消
           </Button>
           <Button onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Submitting…" : "Submit Review"}
+            {submitting ? "提交中…" : "提交評分"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -73,7 +73,7 @@ export default function PeerReviewModal({
       onOpenChange(false);
     } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to submit reviews. Please try again.");
+      setError(data.error ?? "評分提交失敗，請再試一次。");
     }
     setSubmitting(false);
   }
@@ -82,7 +82,7 @@ export default function PeerReviewModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Rate Your Fellow Players</DialogTitle>
+          <DialogTitle>評分球友</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -100,7 +100,7 @@ export default function PeerReviewModal({
                 </div>
 
                 <div className="space-y-1 pl-11">
-                  <p className="text-xs text-muted-foreground">Star rating</p>
+                  <p className="text-xs text-muted-foreground">星級評分</p>
                   <StarRatingInput
                     value={drafts[player.user_id]?.rating ?? 5}
                     onChange={(v) => updateDraft(player.user_id, { rating: v })}
@@ -108,7 +108,7 @@ export default function PeerReviewModal({
                 </div>
 
                 <div className="space-y-1 pl-11">
-                  <p className="text-xs text-muted-foreground">Badges (optional)</p>
+                  <p className="text-xs text-muted-foreground">成就徽章（選填）</p>
                   <BadgeSelector
                     selected={drafts[player.user_id]?.badges ?? []}
                     onChange={(badges) => updateDraft(player.user_id, { badges })}
@@ -123,10 +123,10 @@ export default function PeerReviewModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
-            Cancel
+            取消
           </Button>
           <Button onClick={handleSubmit} disabled={submitting || players.length === 0}>
-            {submitting ? "Submitting…" : "Submit Reviews"}
+            {submitting ? "提交中…" : "提交評分"}
           </Button>
         </DialogFooter>
       </DialogContent>

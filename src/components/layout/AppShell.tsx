@@ -19,7 +19,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
 
   const navItems = [
-    { href: "/dashboard", label: "Home", icon: Calendar, match: ["/dashboard", "/sessions"] },
+    { href: "/dashboard", label: "首頁", icon: Calendar, match: ["/dashboard", "/sessions"] },
     { href: "/clubs", label: t("nav.clubs"), icon: Users, match: ["/clubs"] },
     { href: "/profile", label: t("nav.profile"), icon: User, match: ["/profile"] },
   ];

@@ -21,7 +21,7 @@ function LoginContent() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(
-    errorParam === "auth_failed" ? "Authentication failed. Please try again." : null
+    errorParam === "auth_failed" ? "驗證失敗，請再試一次。" : null
   );
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -41,7 +41,7 @@ function LoginContent() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccessMsg("Check your email to confirm your account.");
+        setSuccessMsg("請查看您的電子郵件以確認帳號。");
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -68,7 +68,7 @@ function LoginContent() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">PickleMaster</CardTitle>
           <CardDescription>
-            {mode === "signin" ? "Sign in to your account" : "Create a new account"}
+            {mode === "signin" ? "登入您的帳號" : "建立新帳號"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -89,18 +89,18 @@ function LoginContent() {
             onClick={handleGoogleLogin}
             type="button"
           >
-            Continue with Google
+            使用 Google 登入
           </Button>
 
           <div className="flex items-center gap-2">
             <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">or</span>
+            <span className="text-xs text-muted-foreground">或</span>
             <Separator className="flex-1" />
           </div>
 
           <form onSubmit={handleEmailAuth} className="space-y-3">
             <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">電子郵件</Label>
               <Input
                 id="email"
                 type="email"
@@ -111,7 +111,7 @@ function LoginContent() {
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">密碼</Label>
               <Input
                 id="password"
                 type="password"
@@ -124,32 +124,32 @@ function LoginContent() {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading
-                ? "Loading…"
+                ? "載入中…"
                 : mode === "signin"
-                ? "Sign in"
-                : "Create account"}
+                ? "登入"
+                : "建立帳號"}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
             {mode === "signin" ? (
               <>
-                No account?{" "}
+                還沒有帳號？{" "}
                 <button
                   className="underline hover:text-foreground"
                   onClick={() => setMode("signup")}
                 >
-                  Sign up
+                  註冊
                 </button>
               </>
             ) : (
               <>
-                Already have an account?{" "}
+                已有帳號？{" "}
                 <button
                   className="underline hover:text-foreground"
                   onClick={() => setMode("signin")}
                 >
-                  Sign in
+                  登入
                 </button>
               </>
             )}
@@ -162,7 +162,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">載入中...</div>}>
       <LoginContent />
     </Suspense>
   );

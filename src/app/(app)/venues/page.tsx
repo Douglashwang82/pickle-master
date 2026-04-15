@@ -54,15 +54,15 @@ export default async function VenuesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Venues</h1>
+        <h1 className="text-2xl font-bold">場地</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Pickleball courts rated by players
+          由球員評分的匹克球場地
         </p>
       </div>
 
       {venues.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="text-lg">No venues listed yet.</p>
+          <p className="text-lg">目前尚無場地資料。</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -95,7 +95,7 @@ export default async function VenuesPage() {
                     {venue.avg_rating !== null ? (
                       <span className="text-sm font-medium">{venue.avg_rating.toFixed(1)}</span>
                     ) : (
-                      <span className="text-sm text-muted-foreground">No ratings yet</span>
+                      <span className="text-sm text-muted-foreground">尚無評分</span>
                     )}
                     {venue.review_count > 0 && (
                       <span className="text-xs text-muted-foreground">

@@ -23,16 +23,16 @@ export async function GET(request: Request) {
 
     // 1. Seed Users
     const usersToSeed = [
-      { email: "player1@example.com", name: "Alpha Player", skill: "pro", avatar: "/images/avatars/user-1.png" },
-      { email: "player2@example.com", name: "Beta Smash", skill: "advanced", avatar: "/images/avatars/user-2.png" },
-      { email: "player3@example.com", name: "Gamma Dinker", skill: "intermediate", avatar: "/images/avatars/user-3.png" },
-      { email: "player4@example.com", name: "Delta Lobber", skill: "beginner", avatar: "/images/avatars/user-4.png" },
-      { email: "player5@example.com", name: "Epsilon Spinner", skill: "intermediate", avatar: "/images/avatars/user-5.png" },
-      { email: "player6@example.com", name: "Zeta Server", skill: "advanced", avatar: "/images/avatars/user-6.png" },
-      { email: "player7@example.com", name: "Eta Volleyer", skill: "pro", avatar: "/images/avatars/user-7.png" },
-      { email: "player8@example.com", name: "Theta Kitchener", skill: "intermediate", avatar: "/images/avatars/user-8.png" },
-      { email: "player9@example.com", name: "Iota Rookie", skill: "beginner", avatar: "/images/avatars/user-9.png" },
-      { email: "player10@example.com", name: "Kappa Master", skill: "pro", avatar: "/images/avatars/user-10.png" },
+      { email: "player1@example.com", name: "王大明", skill: "pro", avatar: "/images/avatars/user-1.png" },
+      { email: "player2@example.com", name: "李小華", skill: "advanced", avatar: "/images/avatars/user-2.png" },
+      { email: "player3@example.com", name: "陳志遠", skill: "intermediate", avatar: "/images/avatars/user-3.png" },
+      { email: "player4@example.com", name: "林美珍", skill: "beginner", avatar: "/images/avatars/user-4.png" },
+      { email: "player5@example.com", name: "張家豪", skill: "intermediate", avatar: "/images/avatars/user-5.png" },
+      { email: "player6@example.com", name: "黃雅婷", skill: "advanced", avatar: "/images/avatars/user-6.png" },
+      { email: "player7@example.com", name: "吳建宏", skill: "pro", avatar: "/images/avatars/user-7.png" },
+      { email: "player8@example.com", name: "劉怡君", skill: "intermediate", avatar: "/images/avatars/user-8.png" },
+      { email: "player9@example.com", name: "許志偉", skill: "beginner", avatar: "/images/avatars/user-9.png" },
+      { email: "player10@example.com", name: "蔡淑芬", skill: "pro", avatar: "/images/avatars/user-10.png" },
     ];
 
     const seededUsers = [];
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
         display_name: u.name,
         skill_level: u.skill,
         photo_url: u.avatar,
-        bio: `Seasoned ${u.skill} player from Taipei. Love the kitchen game!`,
+        bio: `來自台北的${u.skill}球員，特別喜歡近網短球！`,
       }, { onConflict: "user_id" });
 
       if (profileError) throw profileError;
@@ -89,11 +89,11 @@ export async function GET(request: Request) {
 
     // 2. Seed Venues
     const venuesToSeed = [
-      { name: "Xinyi District Court", district: "Xinyi", address: "100 Songqin St" },
-      { name: "Daan Arena", district: "Daan", address: "55 Xinsheng S Rd" },
-      { name: "Neihu Pickleball Hub", district: "Neihu", address: "12 Zhouzi St" },
-      { name: "Zhongshan Green Park", district: "Zhongshan", address: "2 Zhongshan N Rd" },
-      { name: "Songshan Sky Court", district: "Songshan", address: "50 Nanjing E Rd" },
+      { name: "信義區球場", district: "信義區", address: "台北市信義區松勤街100號" },
+      { name: "大安室內場館", district: "大安區", address: "台北市大安區新生南路三段55號" },
+      { name: "內湖匹克球中心", district: "內湖區", address: "台北市內湖區洲子街12號" },
+      { name: "中山綠地場", district: "中山區", address: "台北市中山區中山北路二段44巷2號" },
+      { name: "松山空中球場", district: "松山區", address: "台北市松山區南京東路五段50號" },
     ];
 
     const seededVenues = [];
@@ -113,9 +113,9 @@ export async function GET(request: Request) {
 
     // 3. Seed Clubs
     const clubsToSeed = [
-      { name: "Taipei Pickleball Pros", slug: "taipei-pros", owner: seededUsers[0] },
-      { name: "Xinyi Social Dinks", slug: "xinyi-social", owner: seededUsers[1] },
-      { name: "Weekend Warriors", slug: "weekend-warriors", owner: seededUsers[2] },
+      { name: "台北匹克球菁英隊", slug: "taipei-pros", owner: seededUsers[0] },
+      { name: "信義休閒匹克球社", slug: "xinyi-social", owner: seededUsers[1] },
+      { name: "週末戰士球隊", slug: "weekend-warriors", owner: seededUsers[2] },
     ];
 
     const seededClubs = [];
@@ -128,7 +128,7 @@ export async function GET(request: Request) {
             name: c.name,
             slug: c.slug,
             owner_user_id: c.owner.id,
-            description: `The best place for ${c.name} in the city. join us!`,
+            description: `${c.name}是城市中最棒的匹克球社團，快來加入我們！`,
           })
           .select("*")
           .single();
@@ -166,10 +166,10 @@ export async function GET(request: Request) {
     const seededSessions = [];
     for (const club of seededClubs) {
       const sessionPlans = [
-        { title: "Morning Practice", deltaDays: -2, status: "completed" },
-        { title: "Evening Social", deltaDays: -1, status: "completed" },
-        { title: "Weekend Tournament", deltaDays: 2, status: "published" },
-        { title: "Beginner Clinic", deltaDays: 5, status: "published" },
+        { title: "週間早晨練習", deltaDays: -2, status: "completed" },
+        { title: "週間晚間聯誼賽", deltaDays: -1, status: "completed" },
+        { title: "週末對戰賽", deltaDays: 2, status: "published" },
+        { title: "新手入門工作坊", deltaDays: 5, status: "published" },
       ];
 
       for (const plan of sessionPlans) {
@@ -230,7 +230,7 @@ export async function GET(request: Request) {
             lighting_rating: 4 + Math.floor(Math.random() * 2),
             floor_rating: 4 + Math.floor(Math.random() * 2),
             transport_rating: 4 + Math.floor(Math.random() * 2),
-            comment: "Great session! The courts were clean.",
+            comment: "場地很棒！球場非常乾淨整潔。",
           }, { onConflict: "session_id,reviewer_user_id" });
 
           // Peer Reviews for others in the session
@@ -241,7 +241,7 @@ export async function GET(request: Request) {
               reviewer_user_id: user.id,
               reviewee_user_id: other.id,
               rating: 5,
-              badges: ["Good Sportsmanship", "Strong Smash"],
+              badges: ["準時王", "神對手"],
             }, { onConflict: "session_id,reviewer_user_id,reviewee_user_id" });
           }
         }

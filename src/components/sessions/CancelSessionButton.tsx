@@ -30,22 +30,22 @@ export default function CancelSessionButton({ sessionId }: { sessionId: string }
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="destructive" size="sm">
-          Cancel Session
+          取消場次
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cancel this session?</DialogTitle>
+          <DialogTitle>確定取消此場次？</DialogTitle>
           <DialogDescription>
-            All confirmed participants will be marked for refund. This cannot be undone.
+            所有已確認的參加者將被標記退款。此操作無法復原。
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Keep session
+            保留場次
           </Button>
           <Button variant="destructive" onClick={handleCancel} disabled={loading}>
-            {loading ? "Cancelling…" : "Yes, cancel"}
+            {loading ? "取消中…" : "確定取消"}
           </Button>
         </DialogFooter>
       </DialogContent>
