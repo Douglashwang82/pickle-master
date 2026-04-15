@@ -7,14 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CoverImageUpload from "@/components/clubs/CoverImageUpload";
+import { TAIPEI_DISTRICTS } from "@/lib/constants/districts";
 import type { Club } from "@/types/domain";
 
 type Props = {
   club?: Pick<
     Club,
     "id" | "slug" | "name" | "description" | "rules" | "public_status" | "cover_image_url"
-  >;
+  > & {
+    district?: string | null;
+    membership_type?: string | null;
+  };
 };
 
 export default function ClubForm({ club }: Props) {
@@ -30,6 +35,10 @@ export default function ClubForm({ club }: Props) {
   );
   const [coverImageUrl, setCoverImageUrl] = useState<string>(
     club?.cover_image_url ?? ""
+  );
+  const [district, setDistrict] = useState<string>(club?.district ?? "");
+  const [membershipType, setMembershipType] = useState<"open" | "application">(
+    club?.membership_type === "open" ? "open" : "application"
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +59,8 @@ export default function ClubForm({ club }: Props) {
       rules,
       public_status: publicStatus,
       cover_image_url: coverImageUrl || undefined,
+      district: district || undefined,
+      membership_type: membershipType,
     };
     const url = isEditing ? `/api/clubs/${club!.id}` : "/api/clubs";
     const method = isEditing ? "PATCH" : "POST";
@@ -160,6 +171,42 @@ export default function ClubForm({ club }: Props) {
                     value={val}
                     checked={publicStatus === val}
                     onChange={() => setPublicStatus(val)}
+                    className="accent-primary"
+                  />
+                  <span className="text-sm">{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label>地區</Label>
+            <Select value={district} onValueChange={setDistrict}>
+              <SelectTrigger>
+                <SelectValue placeholder="請選擇地區（選填）" />
+              </SelectTrigger>
+              <SelectContent>
+                {TAIPEI_DISTRICTS.map((d) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label>加入方式</Label>
+            <div className="flex gap-3">
+              {([
+                { value: "application", label: "需要申請（社長審核）" },
+                { value: "open", label: "公開加入（立即加入）" },
+              ] as const).map(({ value: val, label }) => (
+                <label key={val} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="membership_type"
+                    value={val}
+                    checked={membershipType === val}
+                    onChange={() => setMembershipType(val)}
                     className="accent-primary"
                   />
                   <span className="text-sm">{label}</span>

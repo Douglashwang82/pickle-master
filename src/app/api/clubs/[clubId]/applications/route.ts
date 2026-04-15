@@ -25,7 +25,7 @@ export async function POST(request: Request, { params }: Params) {
   // Check club exists and is active
   const { data: club } = await supabaseAdmin
     .from("clubs")
-    .select("id")
+    .select("id, membership_type")
     .eq("id", clubId)
     .eq("status", "active")
     .single();
@@ -44,7 +44,32 @@ export async function POST(request: Request, { params }: Params) {
     return fail("Already a member", "ALREADY_MEMBER", 409);
   }
 
-  // Check no pending application
+  // Open-join clubs: skip the application queue and grant membership immediately.
+  if (club.membership_type === "open") {
+    const { data: membership, error: memberError } = await supabaseAdmin
+      .from("club_memberships")
+      .insert({
+        club_id: clubId,
+        user_id: auth.appUserId,
+        role: "member",
+        status: "active",
+      })
+      .select()
+      .single();
+
+    if (memberError || !membership) {
+      return fail("Failed to join club", "DB_ERROR", 500);
+    }
+
+    await trackEvent("membership_joined", {
+      user_id: auth.appUserId,
+      club_id: clubId,
+    });
+
+    return ok({ ...membership, membership_type: "open" }, 201);
+  }
+
+  // Application-based clubs: check for pending application before inserting.
   const { data: existingApp } = await supabaseAdmin
     .from("membership_applications")
     .select("id")

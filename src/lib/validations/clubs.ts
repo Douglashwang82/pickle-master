@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TAIPEI_DISTRICTS } from "@/lib/constants/districts";
 
 const slugSchema = z
   .string()
@@ -14,9 +15,20 @@ export const CreateClubSchema = z.object({
   cover_image_url: z.string().url().optional().or(z.literal("")),
   rules: z.string().max(5000).trim().optional(),
   public_status: z.enum(["public", "private"]).default("public"),
+  district: z.enum(TAIPEI_DISTRICTS).optional(),
+  membership_type: z.enum(["open", "application"]).default("application"),
 });
 
 export const UpdateClubSchema = CreateClubSchema.partial().omit({ slug: true });
 
+export const PublicClubsQuerySchema = z.object({
+  q: z.string().max(100).optional(),
+  district: z.enum(TAIPEI_DISTRICTS).optional(),
+  membership: z.enum(["open", "application"]).optional(),
+  sort: z.enum(["newest", "most_members", "most_active"]).default("newest"),
+  page: z.coerce.number().int().min(1).default(1),
+});
+
 export type CreateClubInput = z.infer<typeof CreateClubSchema>;
 export type UpdateClubInput = z.infer<typeof UpdateClubSchema>;
+export type PublicClubsQuery = z.infer<typeof PublicClubsQuerySchema>;
