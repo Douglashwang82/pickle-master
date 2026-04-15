@@ -20,9 +20,10 @@ type Props = {
   clubId: string;
   clubSlug: string;
   currentApplication: Application;
+  isAuthenticated?: boolean;
 };
 
-export default function ApplyDialog({ clubId, clubSlug, currentApplication }: Props) {
+export default function ApplyDialog({ clubId, clubSlug, currentApplication, isAuthenticated = true }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [introMessage, setIntroMessage] = useState("");
@@ -30,6 +31,15 @@ export default function ApplyDialog({ clubId, clubSlug, currentApplication }: Pr
   const [cancelLoading, setCancelLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+
+  // Guest: redirect to login
+  if (!isAuthenticated) {
+    return (
+      <Button onClick={() => router.push(`/login?next=/clubs/${clubSlug}`)}>
+        登入以申請加入
+      </Button>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
