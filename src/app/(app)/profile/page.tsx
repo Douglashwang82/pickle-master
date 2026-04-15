@@ -2,15 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import ReputationDisplay from "@/components/reviews/ReputationDisplay";
 import { Badge } from "@/components/ui/badge";
+import ReputationDisplay from "@/components/reviews/ReputationDisplay";
 import { Star } from "lucide-react";
+import { getSkillLabel, getSkillColor } from "@/lib/constants/skills";
+import type { ClubWithDiscovery } from "@/types/domain";
 
 type PeerReview = {
   rating: number;
@@ -43,6 +46,7 @@ export default function ProfilePage() {
   const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [recommendedClubs, setRecommendedClubs] = useState<ClubWithDiscovery[]>([]);
 
   useEffect(() => {
     async function loadProfile() {
@@ -81,6 +85,16 @@ export default function ProfilePage() {
 
     if (res.ok) {
       setSuccess(true);
+      // On new profile completion, fetch recommended clubs matching skill level
+      if (isNew && profile.skill_level) {
+        const clubsRes = await fetch(
+          `/api/clubs/public?skill=${profile.skill_level}&sort=most_active&page=1`
+        );
+        if (clubsRes.ok) {
+          const clubsData = await clubsRes.json();
+          setRecommendedClubs((clubsData.clubs ?? []).slice(0, 3));
+        }
+      }
     } else {
       let errorMsg = "個人資料更新失敗";
       try {
@@ -245,6 +259,92 @@ export default function ProfilePage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Recommended clubs — shown after new profile save when skill_level is set */}
+      {isNew && success && recommendedClubs.length > 0 && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-extrabold tracking-tight">推薦社團</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                根據您的技術程度為您推薦
+              </p>
+            </div>
+            <Link href="/clubs" className="text-sm font-medium text-primary hover:underline">
+              查看全部 →
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {recommendedClubs.map((club) => (
+              <Link
+                key={club.id}
+                href={`/clubs/${club.slug}`}
+                className="block group"
+              >
+                <div className="flex gap-4 p-4 rounded-2xl border border-border/40 bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200">
+                  {/* Mini cover */}
+                  <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-secondary flex items-center justify-center">
+                    {club.cover_image_url ? (
+                      <img
+                        src={club.cover_image_url}
+                        alt={club.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-primary font-black text-sm">
+                        {club.name.substring(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm group-hover:text-primary transition-colors truncate">
+                      {club.name}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {club.district && (
+                        <Badge variant="secondary" className="text-[10px] px-2 py-0">
+                          {club.district}
+                        </Badge>
+                      )}
+                      {club.skill_levels?.map((s) => (
+                        <span
+                          key={s}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getSkillColor(s)}`}
+                        >
+                          {getSkillLabel(s)}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      👥 {club.member_count} 位成員
+                      {club.upcoming_session_count > 0 && ` · 📅 ${club.upcoming_session_count} 場即將舉辦`}
+                    </p>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="shrink-0 self-center">
+                    <span className="text-xs font-bold text-primary">查看 →</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <Button asChild className="w-full rounded-full font-bold" size="lg">
+            <Link href="/clubs">探索更多社團</Link>
+          </Button>
+        </div>
+      )}
+
+      {/* On new profile, show CTA even without skill level / before save */}
+      {isNew && !success && (
+        <div className="text-center py-8 border border-dashed border-border/60 rounded-2xl bg-secondary/20">
+          <p className="text-sm text-muted-foreground">儲存資料後，我們將為您推薦適合的社團。</p>
+        </div>
+      )}
     </div>
   );
 }
