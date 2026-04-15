@@ -1,22 +1,15 @@
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import ClubCard from "@/components/clubs/ClubCard";
 import ClubFilterBar from "@/components/clubs/ClubFilterBar";
+import ClubMapLoader from "@/components/clubs/ClubMapLoader";
 import { Plus } from "lucide-react";
 import type { ClubWithDiscovery } from "@/types/domain";
 import { PublicClubsQuerySchema } from "@/lib/validations/clubs";
 
-// Map component: client-only (no SSR) — maplibre-gl uses browser APIs
-const ClubMapView = dynamic(
-  () => import("@/components/clubs/ClubMapView"),
-  { ssr: false, loading: () => <div className="h-[520px] rounded-2xl bg-secondary animate-pulse" /> }
-);
-
-export const dynamic_ = "force-dynamic";
-export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 const LIMIT = 20;
 
@@ -157,7 +150,7 @@ export default async function PublicClubsPage(props: {
 
       {/* Map view */}
       {view === "map" && (
-        <ClubMapView
+        <ClubMapLoader
           clubs={clubs}
           userLat={userLat}
           userLng={userLng}
