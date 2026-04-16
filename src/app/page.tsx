@@ -1,9 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/context";
 import LanguageToggle from "@/components/layout/LanguageToggle";
+
+const PickleballScene = dynamic(
+  () => import("@/components/home/PickleballScene"),
+  { ssr: false },
+);
 
 const features = [
   {
@@ -51,7 +57,7 @@ export default function RootPage() {
 
       <main className="flex-1 flex flex-col">
         {/* Hero */}
-        <section className="relative flex flex-col items-center justify-center text-center px-6 pt-24 pb-20 md:pt-36 md:pb-32 overflow-hidden">
+        <section className="relative flex flex-col lg:flex-row items-center justify-between px-6 md:px-12 pt-24 pb-20 md:pt-32 md:pb-28 gap-10 overflow-hidden">
           {/* Court-line decorations — grow outward from center */}
           <div className="absolute inset-0 -z-10 pointer-events-none">
             <div
@@ -68,19 +74,17 @@ export default function RootPage() {
             />
             {/* Center service-line */}
             <div className="absolute bottom-0 left-1/2 -translate-x-px w-px h-64 bg-gradient-to-t from-primary/12 to-transparent" />
-            {/* Ambient glows — slowly floating */}
-            <div className="animate-float absolute top-16 left-[8%] w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
-            <div className="animate-float-reverse absolute bottom-8 right-[8%] w-96 h-96 bg-primary/6 rounded-full blur-3xl" />
           </div>
 
-          <div className="max-w-3xl mx-auto">
+          {/* Left column: text */}
+          <div className="max-w-xl w-full text-center lg:text-left mx-auto lg:mx-0">
             {/* Badge — spring pop entrance */}
             <div className="animate-pop inline-flex items-center px-4 py-1.5 mb-8 text-sm font-bold tracking-wide uppercase rounded-full bg-accent text-accent-foreground shadow-sm">
               {t("home.badge")}
             </div>
 
             {/* H1 — two lines staggered */}
-            <h1 className="text-6xl md:text-7xl lg:text-[5.5rem] font-extrabold tracking-tight mb-6 leading-[1.05] text-foreground">
+            <h1 className="text-5xl md:text-6xl lg:text-[4.5rem] font-extrabold tracking-tight mb-6 leading-[1.05] text-foreground">
               <span
                 className="block animate-in fade-in slide-in-from-bottom-6 duration-700 ease-out"
                 style={{ animationDelay: "150ms", animationFillMode: "both" }}
@@ -97,7 +101,7 @@ export default function RootPage() {
 
             {/* Description */}
             <p
-              className="animate-in fade-in duration-700 ease-out text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed max-w-lg mx-auto"
+              className="animate-in fade-in duration-700 ease-out text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed max-w-md mx-auto lg:mx-0"
               style={{ animationDelay: "520ms", animationFillMode: "both" }}
             >
               {t("home.description")}
@@ -105,7 +109,7 @@ export default function RootPage() {
 
             {/* CTA Buttons — staggered after description */}
             <div
-              className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out flex flex-col sm:flex-row gap-4 justify-center"
+              className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
               style={{ animationDelay: "720ms", animationFillMode: "both" }}
             >
               {/* Primary button with one-time shimmer sweep */}
@@ -130,6 +134,14 @@ export default function RootPage() {
                 </Button>
               </Link>
             </div>
+          </div>
+
+          {/* Right column: 3D pickleball — desktop only */}
+          <div
+            className="hidden lg:block w-[460px] h-[460px] flex-shrink-0"
+            aria-hidden="true"
+          >
+            <PickleballScene />
           </div>
         </section>
 
