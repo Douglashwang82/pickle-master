@@ -1,11 +1,25 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/context";
+import LanguageToggle from "@/components/layout/LanguageToggle";
+import type { User } from "@supabase/supabase-js";
 
-// Public layout: no auth gate. Shows Login or Dashboard based on session state.
-export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useLanguage();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -18,33 +32,35 @@ export default async function PublicLayout({ children }: { children: React.React
           <div className="w-3 h-3 rounded-full bg-accent" />
           PickleMaster
         </Link>
+
         <nav className="flex items-center gap-4">
+          <LanguageToggle className="hidden sm:flex mr-2" />
           <Link href="/sessions">
             <Button variant="ghost" className="text-primary font-medium hover:bg-secondary hidden sm:inline-flex">
-              瀏覽場次
+              {t("nav.browseSessions")}
             </Button>
           </Link>
           <Link href="/clubs">
             <Button variant="ghost" className="text-primary font-medium hover:bg-secondary hidden sm:inline-flex">
-              探索社團
+              {t("nav.findClubs")}
             </Button>
           </Link>
           {user ? (
             <Link href="/dashboard">
               <Button className="font-semibold shadow-sm rounded-full px-6">
-                我的儀表板
+                {t("nav.myDashboard")}
               </Button>
             </Link>
           ) : (
             <>
               <Link href="/login">
                 <Button variant="ghost" className="text-primary font-medium hover:bg-secondary">
-                  登入
+                  {t("nav.signIn")}
                 </Button>
               </Link>
               <Link href="/login">
                 <Button className="font-semibold shadow-sm rounded-full px-6">
-                  開始使用
+                  {t("nav.getStarted")}
                 </Button>
               </Link>
             </>

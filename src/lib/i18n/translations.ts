@@ -10,6 +10,9 @@ export const translations = {
       signOut: "Sign out",
       signIn: "Sign In",
       findClubs: "Find Clubs",
+      browseSessions: "Browse Sessions",
+      getStarted: "Get Started",
+      myDashboard: "My Dashboard",
     },
     home: {
       badge: "Premium Club Management",
@@ -34,6 +37,9 @@ export const translations = {
       signOut: "登出",
       signIn: "登入",
       findClubs: "尋找社團",
+      browseSessions: "瀏覽場次",
+      getStarted: "開始使用",
+      myDashboard: "我的儀表板",
     },
     home: {
       badge: "頂級俱樂部管理系統",
