@@ -34,7 +34,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Top nav */}
       <header className="sticky top-0 z-40 border-b border-border/40 bg-background/80 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/clubs" className="flex items-center gap-2 font-black tracking-tight text-primary hover:opacity-80 transition-opacity">
+          <Link href="/dashboard" className="flex items-center gap-2 font-black tracking-tight text-primary hover:opacity-80 transition-opacity">
             <div className="w-2.5 h-2.5 rounded-full bg-accent" />
             PickleMaster
           </Link>

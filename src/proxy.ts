@@ -32,7 +32,10 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protect all /(app) routes
+  // Protect all /(app) routes.
+  // /clubs and /sessions are in the (public) route group and must remain
+  // accessible without auth. Their (app) sub-routes (/clubs/new, etc.) are
+  // still protected by the (app)/layout.tsx auth guard.
   const isAppRoute =
     pathname !== "/" &&
     !pathname.startsWith("/login") &&
@@ -40,7 +43,9 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith("/api") &&
     !pathname.startsWith("/_next") &&
     !pathname.startsWith("/images") &&
-    !pathname.startsWith("/favicon");
+    !pathname.startsWith("/favicon") &&
+    !pathname.startsWith("/clubs") &&
+    !pathname.startsWith("/sessions");
 
   if (isAppRoute && !user) {
     const loginUrl = request.nextUrl.clone();

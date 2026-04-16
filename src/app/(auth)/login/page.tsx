@@ -13,15 +13,22 @@ import { useSearchParams } from "next/navigation";
 function LoginContent() {
   const supabase = createClient();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/clubs";
+  const rawNext = searchParams.get("next") ?? "";
+  // Only allow relative paths to prevent open redirects
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/clubs";
   const errorParam = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
+  const errorMessages: Record<string, string> = {
+    auth_failed: "驗證失敗，請再試一次。",
+    missing_code: "驗證連結無效，請重新登入。",
+    user_creation_failed: "建立帳號時發生錯誤，請聯絡支援。",
+  };
   const [error, setError] = useState<string | null>(
-    errorParam === "auth_failed" ? "驗證失敗，請再試一次。" : null
+    errorParam ? (errorMessages[errorParam] ?? "發生未知錯誤，請再試一次。") : null
   );
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
