@@ -43,8 +43,8 @@ export const translations = {
     },
     home: {
       badge: "頂級俱樂部管理系統",
-      title_part1: "掌握您的",
-      title_part2: "場地時光",
+      title_part1: "大展球團",
+      title_part2: "成為ＭＶＰ",
       description: "用優雅的方式管理場次、追蹤球員積分，並組織您的匹克球社群。專為重視運動品質的俱樂部打造。",
       exploreClubs: "探索社團",
       leaderLogin: "會長/隊長登入",
