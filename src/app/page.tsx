@@ -1,15 +1,57 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/context";
 import LanguageToggle from "@/components/layout/LanguageToggle";
 
-const PickleballScene = dynamic(
-  () => import("@/components/home/PickleballScene"),
-  { ssr: false },
-);
+function CourtIllustration() {
+  // Top-down pickleball court SVG (singles court proportions: 20ft wide × 44ft long)
+  return (
+    <svg
+      viewBox="0 0 200 440"
+      width="200"
+      height="400"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ display: "block" }}
+    >
+      {/* Outer court */}
+      <rect x="4" y="4" width="192" height="432" fill="#2196b0" stroke="#ffffff" strokeWidth="5" />
+
+      {/* Kitchen zones (NVZ) */}
+      <rect x="4" y="4" width="192" height="120" fill="#1a82a0" />
+      <rect x="4" y="316" width="192" height="120" fill="#1a82a0" />
+
+      {/* Kitchen lines */}
+      <line x1="4" y1="124" x2="196" y2="124" stroke="#ffffff" strokeWidth="4" />
+      <line x1="4" y1="316" x2="196" y2="316" stroke="#ffffff" strokeWidth="4" />
+
+      {/* Center service lines */}
+      <line x1="100" y1="124" x2="100" y2="220" stroke="#ffffff" strokeWidth="3" />
+      <line x1="100" y1="220" x2="100" y2="316" stroke="#ffffff" strokeWidth="3" />
+
+      {/* Net */}
+      <rect x="4" y="215" width="192" height="10" fill="#ffffff" opacity="0.9" rx="2" />
+      {/* Net grid lines */}
+      {[22, 40, 58, 76, 94, 112, 130, 148, 166, 184].map((x) => (
+        <line key={x} x1={x} y1="215" x2={x} y2="225" stroke="#aac" strokeWidth="1" opacity="0.6" />
+      ))}
+      {/* Net posts */}
+      <rect x="0" y="210" width="8" height="20" fill="#d0e8ff" rx="2" />
+      <rect x="192" y="210" width="8" height="20" fill="#d0e8ff" rx="2" />
+
+      {/* Pickleball */}
+      <circle cx="140" cy="170" r="14" fill="#d7ef4c" stroke="#8faa00" strokeWidth="3" />
+      {/* Ball holes hint */}
+      {[
+        [136, 166], [144, 166], [140, 174],
+        [133, 172], [147, 172],
+      ].map(([hx, hy], i) => (
+        <circle key={i} cx={hx} cy={hy} r="2" fill="#8faa00" opacity="0.7" />
+      ))}
+    </svg>
+  );
+}
 
 const features = [
   {
@@ -57,7 +99,7 @@ export default function RootPage() {
 
       <main className="flex-1 flex flex-col">
         {/* Hero */}
-        <section className="relative flex flex-col lg:flex-row items-center justify-between px-6 md:px-12 pt-24 pb-20 md:pt-32 md:pb-28 gap-10 overflow-hidden">
+        <section className="relative flex flex-col items-center px-6 md:px-12 pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
           {/* Court-line decorations — grow outward from center */}
           <div className="absolute inset-0 -z-10 pointer-events-none">
             <div
@@ -76,8 +118,8 @@ export default function RootPage() {
             <div className="absolute bottom-0 left-1/2 -translate-x-px w-px h-64 bg-gradient-to-t from-primary/12 to-transparent" />
           </div>
 
-          {/* Left column: text */}
-          <div className="max-w-xl w-full text-center lg:text-left mx-auto lg:mx-0">
+          {/* Hero text — centered */}
+          <div className="max-w-2xl w-full text-center mx-auto">
             {/* Badge — spring pop entrance */}
             <div className="animate-pop inline-flex items-center px-4 py-1.5 mb-8 text-sm font-bold tracking-wide uppercase rounded-full bg-accent text-accent-foreground shadow-sm">
               {t("home.badge")}
@@ -101,7 +143,7 @@ export default function RootPage() {
 
             {/* Description */}
             <p
-              className="animate-in fade-in duration-700 ease-out text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed max-w-md mx-auto lg:mx-0"
+              className="animate-in fade-in duration-700 ease-out text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed max-w-md mx-auto"
               style={{ animationDelay: "520ms", animationFillMode: "both" }}
             >
               {t("home.description")}
@@ -109,7 +151,7 @@ export default function RootPage() {
 
             {/* CTA Buttons — staggered after description */}
             <div
-              className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+              className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out flex flex-col sm:flex-row gap-4 justify-center"
               style={{ animationDelay: "720ms", animationFillMode: "both" }}
             >
               {/* Primary button with one-time shimmer sweep */}
@@ -136,13 +178,7 @@ export default function RootPage() {
             </div>
           </div>
 
-          {/* Right column: 3D pickleball — desktop only */}
-          <div
-            className="hidden lg:block w-[460px] h-[460px] flex-shrink-0"
-            aria-hidden="true"
-          >
-            <PickleballScene />
-          </div>
+
         </section>
 
         {/* Feature cards — cascade left-to-right with hover lift */}
