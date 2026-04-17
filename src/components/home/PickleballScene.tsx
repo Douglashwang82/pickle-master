@@ -11,7 +11,7 @@ import { setConsoleFunction } from "three";
 // Remove once R3F ships Timer support.
 setConsoleFunction((type: string, message: string, ...rest: unknown[]) => {
   if (type === "warn" && message.includes("Clock: This module has been deprecated")) return;
-  (console as Record<string, (...a: unknown[]) => void>)[type]?.(message, ...rest);
+  (console as unknown as Record<string, (...a: unknown[]) => void>)[type]?.(message, ...rest);
 });
 
 const COURT = {
