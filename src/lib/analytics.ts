@@ -1,5 +1,19 @@
 import { supabaseAdmin } from "@/lib/db";
 
+type AnalyticsInsert = {
+  event_name: string;
+  user_id: string | null;
+  club_id: string | null;
+  session_id: string | null;
+  properties_json: Record<string, string | number | boolean | null>;
+};
+
+type AnalyticsClient = {
+  from: (table: "analytics_events") => {
+    insert: (values: AnalyticsInsert) => Promise<unknown>;
+  };
+};
+
 type EventName =
   | "club_created"
   | "session_created"
@@ -21,7 +35,9 @@ type EventName =
   | "club_board_post_published"
   | "club_board_reaction_added"
   | "peer_review_submitted"
-  | "venue_review_submitted";
+  | "venue_review_submitted"
+  | "waitlist_joined"
+  | "waitlist_promoted";
 
 type EventProps = Record<string, string | number | boolean | null>;
 
@@ -34,8 +50,9 @@ export async function trackEvent(
   }
 ) {
   const { user_id, club_id, session_id, ...rest } = props;
+  const analyticsClient = supabaseAdmin as unknown as AnalyticsClient;
 
-  await supabaseAdmin.from("analytics_events").insert({
+  await analyticsClient.from("analytics_events").insert({
     event_name: eventName,
     user_id: user_id ?? null,
     club_id: club_id ?? null,

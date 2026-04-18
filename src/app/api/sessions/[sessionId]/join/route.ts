@@ -2,13 +2,10 @@ import { requireAuth, requireClubMember, isNextResponse } from "@/lib/utils/auth
 import { supabaseAdmin } from "@/lib/db";
 import { ok, fail } from "@/lib/utils/api";
 import { JoinSessionSchema } from "@/lib/validations/payments";
-import { sessionStatusAfterRegistration } from "@/lib/state-machines/session";
 import { trackEvent } from "@/lib/analytics";
-import type { SessionStatus } from "@/types/domain";
+import { createConfirmedRegistrationWithDebt } from "@/lib/session-registration";
 
 type Params = { params: Promise<{ sessionId: string }> };
-
-const PLATFORM_FEE_RATE = 0.05;
 
 export async function POST(request: Request, { params }: Params) {
   const auth = await requireAuth();
@@ -71,56 +68,24 @@ export async function POST(request: Request, { params }: Params) {
   const now = new Date();
   const nowStr = now.toISOString();
 
-  // Create confirmed registration immediately (payment tracked as debt)
-  const { data: registration, error: regError } = await supabaseAdmin
-    .from("session_registrations")
-    .insert({
-      session_id: sessionId,
-      user_id: auth.appUserId,
-      status: "confirmed",
-      joined_at: nowStr,
-    })
-    .select()
-    .single();
-
-  if (regError || !registration) {
+  let registrationResult;
+  try {
+    registrationResult = await createConfirmedRegistrationWithDebt(
+      {
+        id: session.id,
+        club_id: session.club_id,
+        status: session.status,
+        capacity: session.capacity,
+        fee_twd: session.fee_twd,
+      },
+      auth.appUserId,
+      nowStr
+    );
+  } catch {
     return fail("Failed to create registration", "DB_ERROR", 500);
   }
 
-  // Create payment transaction as 'initiated' — this represents the outstanding debt
-  const platformFee = Math.round(session.fee_twd * PLATFORM_FEE_RATE);
-  const netAmount = session.fee_twd - platformFee;
-
-  const { data: payment, error: payError } = await supabaseAdmin
-    .from("payment_transactions")
-    .insert({
-      session_id: sessionId,
-      registration_id: registration.id,
-      club_id: session.club_id,
-      payer_user_id: auth.appUserId,
-      gateway: "manual",
-      amount_twd: session.fee_twd,
-      platform_fee_twd: platformFee,
-      net_amount_twd: netAmount,
-      status: "initiated",
-    })
-    .select()
-    .single();
-
-  if (payError || !payment) {
-    // Roll back registration
-    await supabaseAdmin
-      .from("session_registrations")
-      .delete()
-      .eq("id", registration.id);
-    return fail("Failed to create debt record", "DB_ERROR", 500);
-  }
-
-  // Link payment record to registration
-  await supabaseAdmin
-    .from("session_registrations")
-    .update({ payment_transaction_id: payment.id })
-    .eq("id", registration.id);
+  const { registration, payment } = registrationResult;
 
   await trackEvent("payment_initiated", {
     user_id: auth.appUserId,
@@ -129,21 +94,6 @@ export async function POST(request: Request, { params }: Params) {
     amount: session.fee_twd,
     method: "manual",
   });
-
-  // Update session status if now full
-  const newConfirmedCount = (confirmedCount ?? 0) + 1;
-  const newStatus = sessionStatusAfterRegistration(
-    session.status as SessionStatus,
-    newConfirmedCount,
-    session.capacity
-  );
-
-  if (newStatus !== session.status) {
-    await supabaseAdmin
-      .from("sessions")
-      .update({ status: newStatus, updated_at: nowStr })
-      .eq("id", sessionId);
-  }
 
   // Notify member: registration confirmed, payment outstanding
   await supabaseAdmin.from("notifications").insert({

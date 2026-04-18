@@ -42,6 +42,11 @@ function renderNotification(n: AppNotification): string {
       const title = typeof p.title === "string" ? p.title : "場次";
       return `提醒：「${title}」將在 24 小時後開始。`;
     }
+    case "waitlist_promoted": {
+      const title = typeof p.session_title === "string" ? p.session_title : "場次";
+      const amt = typeof p.amount_twd === "number" ? `NT$${p.amount_twd}` : "費用";
+      return `候補遞補成功：您已加入「${title}」，請留意 ${amt} 的待繳款項。`;
+    }
     default:
       return n.type.replace(/_/g, " ");
   }

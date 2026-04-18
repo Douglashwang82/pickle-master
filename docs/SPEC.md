@@ -10,14 +10,14 @@
 - Vercel deployment
 
 ## Domain Model
-11 tables: users, profiles, clubs, club_memberships, membership_applications, sessions, session_registrations, payment_transactions, refund_transactions, notifications, analytics_events
+12 tables: users, profiles, clubs, club_memberships, membership_applications, sessions, session_registrations, session_waitlist_entries, payment_transactions, refund_transactions, notifications, analytics_events
 
 ## MVP Slices
 1. Foundation — auth, profiles, club CRUD, public discovery
 2. Membership — apply/approve/reject, roster
-3. Sessions — CRUD, feed, realtime roster
+3. Sessions — CRUD, feed, realtime roster, FIFO waitlist auto-promotion
 4. Payments — mocked join flow, booking holds
 5. Reliability — refunds, reminders, cron jobs, analytics
 
 ## Out of Scope (MVP)
-TapPay real integration, LINE Pay, LINE Login, push notifications, member self-cancel, waitlist, recurring sessions, multi-language UI.
+TapPay real integration, LINE Pay, LINE Login, push notifications, member self-cancel, recurring sessions, multi-language UI.

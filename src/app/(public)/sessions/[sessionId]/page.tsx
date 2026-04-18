@@ -12,6 +12,7 @@ import JoinButton from "@/components/sessions/JoinButton";
 import CancelSessionButton from "@/components/sessions/CancelSessionButton";
 import ReviewSection from "@/components/reviews/ReviewSection";
 import DebtProgressBar from "@/components/sessions/DebtProgressBar";
+import { getWaitlistPosition } from "@/lib/waitlist";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,7 @@ export default async function SessionDetailPage({ params }: Params) {
 
   // Check if current user is already registered
   let myReg: { id: string; status: string } | null = null;
+  let waitlistPosition: number | null = null;
   if (appUserId) {
     const { data } = await supabaseAdmin
       .from("session_registrations")
@@ -78,6 +80,10 @@ export default async function SessionDetailPage({ params }: Params) {
       .in("status", ["confirmed", "payment_pending"])
       .single();
     myReg = data;
+
+    if (!myReg) {
+      waitlistPosition = await getWaitlistPosition(sessionId, appUserId);
+    }
   }
 
   // Fetch payment stats for leaders
@@ -206,7 +212,11 @@ export default async function SessionDetailPage({ params }: Params) {
               fee={session.fee_twd}
               isFull={availableSpots <= 0}
               isAuthenticated={true}
+              waitlistPosition={waitlistPosition}
             />
+          )}
+          {!myReg && waitlistPosition && (
+            <Badge variant="outline">候補順位 #{waitlistPosition}</Badge>
           )}
           {myReg && (
             <Badge variant="secondary">

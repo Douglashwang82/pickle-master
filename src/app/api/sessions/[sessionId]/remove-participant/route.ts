@@ -5,6 +5,7 @@ import { z } from "zod";
 import { initiateRefund } from "@/lib/payment/client";
 import { sessionStatusAfterRegistration } from "@/lib/state-machines/session";
 import type { SessionStatus } from "@/types/domain";
+import { promoteNextWaitlistedMember } from "@/lib/waitlist";
 
 type Params = { params: Promise<{ sessionId: string }> };
 
@@ -24,7 +25,7 @@ export async function POST(request: Request, { params }: Params) {
 
   const { data: session } = await supabaseAdmin
     .from("sessions")
-    .select("id, club_id, status, capacity")
+    .select("id, club_id, title, status, capacity, fee_twd")
     .eq("id", sessionId)
     .single();
 
@@ -84,9 +85,22 @@ export async function POST(request: Request, { params }: Params) {
     .eq("session_id", sessionId)
     .eq("status", "confirmed");
 
-  const newStatus = sessionStatusAfterRegistration(
+  const promoted = await promoteNextWaitlistedMember(
+    {
+      id: session.id,
+      club_id: session.club_id,
+      title: session.title,
+      status: session.status as SessionStatus,
+      capacity: session.capacity,
+      fee_twd: session.fee_twd,
+    },
+    now
+  );
+
+  const finalConfirmedCount = promoted ? (count ?? 0) + 1 : count ?? 0;
+  const newStatus = promoted?.newStatus ?? sessionStatusAfterRegistration(
     session.status as SessionStatus,
-    count ?? 0,
+    finalConfirmedCount,
     session.capacity
   );
 

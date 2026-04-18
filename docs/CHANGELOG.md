@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0] — 2026-04-18
+
+### Added — Session Waitlist
+
+- **DB migration** `20260418010000_session_waitlist.sql`: adds `session_waitlist_entries` with FIFO queue state (`active`, `promoted`, `left`), active-entry uniqueness, queue indexes, and RLS read access for the queued member and club leaders.
+- **API `POST+DELETE /api/sessions/[sessionId]/waitlist`**: active club members can join the waitlist when a session is full, see their current position, and leave the queue later.
+- **Automatic promotion on participant removal**: when a leader removes a confirmed participant and a spot opens, the oldest active waitlist entry is promoted into the session automatically, receives the same debt-style payment record as a direct join, and gets an in-app notification.
+- **Session join flow refactor**: direct joins now share the same registration + payment creation helper as waitlist promotions, so payment tracking stays consistent across both paths.
+- **Session detail page**: full sessions now show `加入候補` for eligible members, and queued members see their current waitlist position with an exit action.
+- **Notification bell**: adds a `waitlist_promoted` message so promoted members are told they are in the roster and still owe the session fee.
+
 ## [0.5.0] — 2026-04-18
 
 ### Added — Club Board

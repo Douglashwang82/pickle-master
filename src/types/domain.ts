@@ -13,6 +13,7 @@ export type ClubMembership = Database["public"]["Tables"]["club_memberships"]["R
 export type MembershipApplication = Database["public"]["Tables"]["membership_applications"]["Row"];
 export type Session = Database["public"]["Tables"]["sessions"]["Row"];
 export type SessionRegistration = Database["public"]["Tables"]["session_registrations"]["Row"];
+export type SessionWaitlistEntry = Database["public"]["Tables"]["session_waitlist_entries"]["Row"];
 export type PaymentTransaction = Database["public"]["Tables"]["payment_transactions"]["Row"];
 export type RefundTransaction = Database["public"]["Tables"]["refund_transactions"]["Row"];
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
