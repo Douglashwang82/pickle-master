@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0] — 2026-04-18
+
+### Added — Club Board
+
+- **DB migration** `20260418000000_club_board.sql`: adds `club_board_posts` and `club_board_reactions` for persistent club announcements/notes, moderation status, pinning, and lightweight emoji reactions, plus member/leader RLS policies.
+- **API `GET+POST /api/clubs/[clubId]/board`**: active members can fetch the board feed; members submit posts for review; leaders can publish directly.
+- **API `POST /api/clubs/[clubId]/board/[postId]/review`**: leaders approve or reject member-submitted board items.
+- **API `POST /api/clubs/[clubId]/board/[postId]/pin`**: leaders pin or unpin published board items.
+- **API `POST /api/clubs/[clubId]/board/[postId]/reactions`**: active members add or remove emoji reactions on published posts.
+- **Club detail page**: adds a fixed board section above the tabbed content, including a featured pinned item, a vertical editorial-style feed, leader moderation queue, and publish/submit composer.
+- **Notifications + analytics**: important published announcements continue to fan out through the existing in-app notification bell, and new analytics events track board submission, publish, and reaction activity.
+
 ## [0.4.0] — 2026-04-17
 
 ### Added — Club Invite Links

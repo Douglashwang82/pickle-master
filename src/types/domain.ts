@@ -1,4 +1,10 @@
 import type { Database } from "./database.types";
+import {
+  BOARD_POST_IMPORTANCE_LEVELS,
+  BOARD_POST_KINDS,
+  BOARD_POST_STATUSES,
+  BOARD_REACTION_EMOJIS,
+} from "@/lib/board-config";
 
 export type User = Database["public"]["Tables"]["users"]["Row"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -57,6 +63,46 @@ export type DebtInfo = {
 export type RegistrationWithPayment = SessionRegistration & {
   profile: Pick<Profile, "user_id" | "display_name" | "photo_url" | "skill_level">;
   payment: DebtInfo | null;
+};
+
+export type BoardPostKind = (typeof BOARD_POST_KINDS)[number];
+export type BoardPostStatus = (typeof BOARD_POST_STATUSES)[number];
+export type BoardPostImportance = (typeof BOARD_POST_IMPORTANCE_LEVELS)[number];
+export type BoardReactionEmoji = (typeof BOARD_REACTION_EMOJIS)[number];
+
+export type BoardUserPreview = Pick<Profile, "user_id" | "display_name" | "photo_url">;
+
+export type BoardReactionSummary = {
+  emoji: BoardReactionEmoji;
+  count: number;
+  reacted: boolean;
+};
+
+export type BoardPostWithMeta = {
+  id: string;
+  club_id: string;
+  author_user_id: string;
+  reviewed_by: string | null;
+  kind: BoardPostKind;
+  title: string | null;
+  body: string;
+  status: BoardPostStatus;
+  importance: BoardPostImportance;
+  is_pinned: boolean;
+  rejection_reason: string | null;
+  published_at: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  author: BoardUserPreview | null;
+  reviewer: BoardUserPreview | null;
+  reactions: BoardReactionSummary[];
+};
+
+export type ClubBoardData = {
+  featuredPost: BoardPostWithMeta | null;
+  publishedPosts: BoardPostWithMeta[];
+  pendingPosts: BoardPostWithMeta[];
 };
 
 export type MemberRole = "leader" | "member";

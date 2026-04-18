@@ -17,6 +17,9 @@ type EventName =
   | "invite_link_revoked"
   | "signup_completed"
   | "profile_completed"
+  | "club_board_post_submitted"
+  | "club_board_post_published"
+  | "club_board_reaction_added"
   | "peer_review_submitted"
   | "venue_review_submitted";
 

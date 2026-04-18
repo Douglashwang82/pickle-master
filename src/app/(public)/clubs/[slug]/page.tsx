@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/db";
+import { getClubBoardData } from "@/lib/board";
 import { createClient } from "@/lib/supabase/server";
 import ClubDetailTabs from "@/components/clubs/ClubDetailTabs";
 import type { ClubAnalyticsData } from "@/app/api/clubs/[clubId]/analytics/route";
@@ -73,6 +74,7 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
     club.owner_user_id === appUserId;
   const isMember = currentMembership?.status === "active" || club.owner_user_id === appUserId;
   const isAuthenticated = !!user;
+  const boardData = isMember ? await getClubBoardData(club.id, appUserId, Boolean(isLeader)) : null;
 
   // Default tab: members see Sessions; non-members/guests see Info
   const validTabs = ["sessions", "members", "info", "analytics", "settings"];
@@ -315,6 +317,7 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
       isMember={isMember}
       isAuthenticated={isAuthenticated}
       memberCount={memberCount ?? 0}
+      boardData={boardData}
       sessions={sessionsWithSpots}
       members={members}
       applications={applications}

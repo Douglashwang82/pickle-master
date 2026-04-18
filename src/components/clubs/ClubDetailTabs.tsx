@@ -9,15 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus } from "lucide-react";
+import ClubBoardSection from "@/components/clubs/ClubBoardSection";
 import SessionCard from "@/components/sessions/SessionCard";
 import SessionForm from "@/components/sessions/SessionForm";
 import ApplicationReview from "@/components/clubs/ApplicationReview";
 import ClubForm from "@/components/clubs/ClubForm";
 import ApplyDialog from "@/components/clubs/ApplyDialog";
 import ClubAnalytics from "@/components/clubs/ClubAnalytics";
-import AnnounceDialog from "@/components/clubs/AnnounceDialog";
 import InviteLinkManager from "@/components/clubs/InviteLinkManager";
-import type { SessionWithSpots } from "@/types/domain";
+import type { ClubBoardData, SessionWithSpots } from "@/types/domain";
 import type { ClubAnalyticsData } from "@/app/api/clubs/[clubId]/analytics/route";
 
 type ClubData = {
@@ -72,6 +72,7 @@ type Props = {
   isMember: boolean;
   isAuthenticated: boolean;
   memberCount: number;
+  boardData: ClubBoardData | null;
   sessions: SessionWithSpots[];
   members: MemberRow[];
   applications: ApplicationRow[];
@@ -87,6 +88,7 @@ export default function ClubDetailTabs({
   isMember,
   isAuthenticated,
   memberCount,
+  boardData,
   sessions,
   members,
   applications,
@@ -123,12 +125,16 @@ export default function ClubDetailTabs({
             <span className="text-sm text-muted-foreground">{memberCount} 位成員</span>
           </div>
         </div>
-        {isLeader && (
-          <div className="shrink-0 pt-1">
-            <AnnounceDialog clubId={club.id} memberCount={memberCount} />
-          </div>
-        )}
       </div>
+
+      {isMember && boardData && (
+        <ClubBoardSection
+          clubId={club.id}
+          clubName={club.name}
+          isLeader={isLeader}
+          boardData={boardData}
+        />
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={switchTab}>
