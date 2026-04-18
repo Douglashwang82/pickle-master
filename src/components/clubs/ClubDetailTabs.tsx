@@ -16,6 +16,7 @@ import ClubForm from "@/components/clubs/ClubForm";
 import ApplyDialog from "@/components/clubs/ApplyDialog";
 import ClubAnalytics from "@/components/clubs/ClubAnalytics";
 import AnnounceDialog from "@/components/clubs/AnnounceDialog";
+import InviteLinkManager from "@/components/clubs/InviteLinkManager";
 import type { SessionWithSpots } from "@/types/domain";
 import type { ClubAnalyticsData } from "@/app/api/clubs/[clubId]/analytics/route";
 
@@ -285,8 +286,10 @@ export default function ClubDetailTabs({
 
         {/* ── Settings tab (leader only) ── */}
         {isLeader && (
-          <TabsContent value="settings" className="mt-6">
+          <TabsContent value="settings" className="mt-6 space-y-8">
             <ClubForm club={club} />
+            <Separator />
+            <InviteLinkManager clubId={club.id} />
           </TabsContent>
         )}
       </Tabs>
