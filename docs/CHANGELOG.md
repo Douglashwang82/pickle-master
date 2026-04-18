@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0] — 2026-04-17
+
+### Added — Club Invite Links
+
+- **DB migration** `20260417000000_club_invite_links.sql`: new `club_invite_links` table (token, club_id, creator, use_count, expires_at, max_uses, is_active) with RLS policies for leader write access.
+- **API `POST /api/clubs/[clubId]/invite`**: leader generates a new invite link (deactivates any existing active link first).
+- **API `GET /api/clubs/[clubId]/invite`**: leader retrieves the current active invite link.
+- **API `DELETE /api/clubs/[clubId]/invite`**: leader revokes the active invite link.
+- **API `GET /api/invite/[token]`**: public endpoint — resolves token to club preview info; validates link is active, not expired, and not exhausted.
+- **API `POST /api/invite/[token]/join`**: authenticated endpoint — joins club immediately (open clubs) or submits a membership application (application-required clubs) via invite link; increments use_count on the token.
+- **Page `/invite/[token]`**: public invite landing page. Unauthenticated visitors see club info and a "Sign In / Sign Up" button that redirects to login with a `next` param pointing back to the invite URL. Authenticated visitors can join or apply in one click. Already-members and pending applicants see appropriate status messages.
+- **`InviteLinkManager` component**: leader-only UI in the club Settings tab to generate, copy, regenerate, and revoke invite links with use-count display.
+
 ## [0.3.0] — 2026-04-15
 
 ### Added — Guest Browse: Public Clubs & Sessions
