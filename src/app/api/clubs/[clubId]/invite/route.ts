@@ -40,6 +40,7 @@ export async function POST(_req: Request, { params }: Params) {
     .single();
 
   if (error || !link) {
+    console.error("[invite POST] DB error:", error?.message);
     return fail("Failed to create invite link", "DB_ERROR", 500);
   }
 
