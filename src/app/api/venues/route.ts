@@ -1,6 +1,19 @@
 import { supabaseAdmin } from "@/lib/db";
 import { ok } from "@/lib/utils/api";
 
+type VenueWithRatings = {
+  id: string;
+  name: string;
+  address: string | null;
+  district: string | null;
+  venue_reviews?: {
+    facilities_rating: number;
+    lighting_rating: number;
+    floor_rating: number;
+    transport_rating: number;
+  }[];
+};
+
 export async function GET() {
   // Fetch venues with aggregated average ratings from venue_reviews
   const { data: venues } = await supabaseAdmin
@@ -10,13 +23,8 @@ export async function GET() {
     )
     .order("name");
 
-  const result = (venues ?? []).map((venue) => {
-    const reviews = venue.venue_reviews as {
-      facilities_rating: number;
-      lighting_rating: number;
-      floor_rating: number;
-      transport_rating: number;
-    }[];
+  const result = ((venues ?? []) as unknown as VenueWithRatings[]).map((venue) => {
+    const reviews = venue.venue_reviews ?? [];
 
     const count = reviews.length;
     if (count === 0) {

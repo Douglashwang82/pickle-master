@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Authenticated users who open the intro page at `/` are now redirected to `/clubs`.
+- Club detail navigation now shows an immediate loading state and skips leader-only venue data for non-leaders.
+- Added a global route loading state so navigations across the app show feedback immediately.
+- Restored production build type-checking by tightening Supabase table fallback types and explicit relation result casts.
+- Protected `/api/dev/*` seed and force-complete routes in production behind `DEV_ROUTE_SECRET`.
+- Moved confirmed registration plus offline debt creation into a locking Postgres RPC to prevent last-slot overbooking races.
+- Relaxed session registration uniqueness to only active registrations so cancelled, removed, or refunded members can rejoin later.
+- Reused the shared auth guard on the dashboard so app-user/profile sync stays centralized.
+- Added unit coverage for the production dev-route guard.
+- Added unit coverage for the atomic registration/debt RPC helper.
+- Restricted the atomic registration/debt RPC to the Supabase service role.
+- Added a shared JSON body parser and consistent `INVALID_JSON` responses across API routes that accept request bodies.
+
 ## [0.6.1] — 2026-04-19
 
 ### Changed — Homepage Redesign

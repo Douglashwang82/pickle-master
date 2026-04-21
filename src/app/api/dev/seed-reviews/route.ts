@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/db";
+import { guardDevRoute } from "@/lib/utils/dev-route";
 
-export async function POST() {
+export async function POST(request: Request) {
+  const guarded = guardDevRoute(request);
+  if (guarded) return guarded;
+
   try {
     // 1. Create a dummy venue if it doesn't exist
     let { data: venue } = await supabaseAdmin.from("venues").select("*").limit(1).single();

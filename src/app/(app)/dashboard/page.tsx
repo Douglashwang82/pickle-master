@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -6,40 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { isNextResponse, requireAuth } from "@/lib/utils/auth-guard";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  let { data: appUser } = await supabaseAdmin
-    .from("users")
-    .select("id")
-    .eq("auth_provider_user_id", user.id)
-    .single();
-
-  if (!appUser) {
-    // Sync missing user record
-    const { data: newUser } = await supabaseAdmin
-      .from("users")
-      .insert({
-        auth_provider_user_id: user.id,
-        email: user.email ?? "",
-      })
-      .select("id")
-      .single();
-
-    if (!newUser) redirect("/login");
-    appUser = newUser;
-
-    // Ensure default profile
-    await supabaseAdmin.from("profiles").upsert({
-      user_id: appUser.id,
-      display_name: user.email?.split("@")[0] ?? "Player",
-    }, { onConflict: "user_id" });
-  }
+  const auth = await requireAuth();
+  if (isNextResponse(auth)) redirect("/login");
 
   // Upcoming confirmed registrations
   const { data: registrations } = await supabaseAdmin
@@ -49,7 +21,7 @@ export default async function DashboardPage() {
       sessions(id, title, scheduled_start_at, location_name, fee_twd, status,
         clubs(slug, name))
     `)
-    .eq("user_id", appUser.id)
+    .eq("user_id", auth.appUserId)
     .eq("status", "confirmed")
     .order("joined_at", { ascending: false })
     .limit(20);

@@ -2,7 +2,7 @@ import { requireAuth, requireClubMember, isNextResponse } from "@/lib/utils/auth
 import { supabaseAdmin } from "@/lib/db";
 import { trackEvent } from "@/lib/analytics";
 import { ToggleBoardReactionSchema } from "@/lib/validations/board";
-import { ok, fail } from "@/lib/utils/api";
+import { ok, fail, parseJsonBody } from "@/lib/utils/api";
 
 type Params = { params: Promise<{ clubId: string; postId: string }> };
 
@@ -15,7 +15,9 @@ export async function POST(request: Request, { params }: Params) {
   const memberGuard = await requireClubMember(clubId, auth.appUserId);
   if (memberGuard) return memberGuard;
 
-  const body: unknown = await request.json().catch(() => ({}));
+  const { body, error: jsonError } = await parseJsonBody(request);
+  if (jsonError) return jsonError;
+
   const parsed = ToggleBoardReactionSchema.safeParse(body);
   if (!parsed.success) {
     return fail("Validation error", "VALIDATION_ERROR", 400, parsed.error.flatten());

@@ -63,11 +63,22 @@ export async function promoteNextWaitlistedMember(
       continue;
     }
 
-    const { registration, payment, newStatus } = await createConfirmedRegistrationWithDebt(
-      session,
-      entry.user_id,
-      nowIso
-    );
+    let registrationResult: Awaited<ReturnType<typeof createConfirmedRegistrationWithDebt>>;
+    try {
+      registrationResult = await createConfirmedRegistrationWithDebt(
+        session,
+        entry.user_id,
+        nowIso
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message.includes("SESSION_FULL")) {
+        return null;
+      }
+      throw error;
+    }
+
+    const { registration, payment, newStatus } = registrationResult;
 
     await supabaseAdmin
       .from("session_waitlist_entries")

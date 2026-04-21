@@ -32,6 +32,12 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  if (pathname === "/" && user) {
+    const clubsUrl = request.nextUrl.clone();
+    clubsUrl.pathname = "/clubs";
+    return NextResponse.redirect(clubsUrl);
+  }
+
   // Protect all /(app) routes.
   // /clubs and /sessions are in the (public) route group and must remain
   // accessible without auth. Their (app) sub-routes (/clubs/new, etc.) are

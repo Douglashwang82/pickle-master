@@ -292,10 +292,12 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
   }
 
   // Venues (for Create Session sheet — leaders only)
-  const { data: venuesRaw } = await supabaseAdmin
-    .from("venues" as any)
-    .select("id, name, district")
-    .order("name");
+  const { data: venuesRaw } = isLeader
+    ? await supabaseAdmin
+        .from("venues" as any)
+        .select("id, name, district")
+        .order("name")
+    : { data: [] };
 
   const venues = (venuesRaw ?? []) as { id: string; name: string; district?: string }[];
 

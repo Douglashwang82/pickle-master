@@ -1,6 +1,6 @@
 import { requireAuth, requireClubLeader, isNextResponse } from "@/lib/utils/auth-guard";
 import { supabaseAdmin } from "@/lib/db";
-import { ok, fail } from "@/lib/utils/api";
+import { ok, fail, parseJsonBody } from "@/lib/utils/api";
 import { UpdateClubSchema } from "@/lib/validations/clubs";
 
 type Params = { params: Promise<{ clubId: string }> };
@@ -37,7 +37,9 @@ export async function PATCH(request: Request, { params }: Params) {
   const guardError = await requireClubLeader(clubId, auth.appUserId);
   if (guardError) return guardError;
 
-  const body: unknown = await request.json();
+  const { body, error: jsonError } = await parseJsonBody(request);
+  if (jsonError) return jsonError;
+
   const parsed = UpdateClubSchema.safeParse(body);
   if (!parsed.success) {
     return fail("Validation error", "VALIDATION_ERROR", 400, parsed.error.flatten());

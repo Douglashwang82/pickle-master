@@ -1,7 +1,11 @@
 import { supabaseAdmin } from "@/lib/db";
+import { guardDevRoute } from "@/lib/utils/dev-route";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const guarded = guardDevRoute(request);
+  if (guarded) return guarded;
+
   const venues = [
     { name: "信義運動中心", district: "信義區", address: "台北市信義區松勤街100號" },
     { name: "大安運動中心", district: "大安區", address: "台北市大安區新生南路三段55號" },

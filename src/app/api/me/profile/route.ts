@@ -1,13 +1,15 @@
 import { requireAuth, isNextResponse } from "@/lib/utils/auth-guard";
 import { supabaseAdmin } from "@/lib/db";
-import { ok, fail } from "@/lib/utils/api";
+import { ok, fail, parseJsonBody } from "@/lib/utils/api";
 import { UpdateProfileSchema } from "@/lib/validations/auth";
 
 export async function PATCH(request: Request) {
   const auth = await requireAuth();
   if (isNextResponse(auth)) return auth;
 
-  const body: unknown = await request.json();
+  const { body, error: jsonError } = await parseJsonBody(request);
+  if (jsonError) return jsonError;
+
   const parsed = UpdateProfileSchema.safeParse(body);
   if (!parsed.success) {
     return fail("Validation error", "VALIDATION_ERROR", 400, parsed.error.flatten());

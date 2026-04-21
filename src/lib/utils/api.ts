@@ -20,3 +20,16 @@ export function fail(
   if (details !== undefined) body.details = details;
   return NextResponse.json(body, { status });
 }
+
+export async function parseJsonBody(
+  request: Request
+): Promise<{ body: unknown; error: null } | { body: null; error: NextResponse }> {
+  try {
+    return { body: await request.json(), error: null };
+  } catch {
+    return {
+      body: null,
+      error: fail("Invalid JSON body", "INVALID_JSON", 400),
+    };
+  }
+}
