@@ -46,6 +46,21 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
     setLoading(true);
     setError(null);
 
+    const startAt = new Date(form.scheduled_start_at);
+    const endAt = new Date(form.scheduled_end_at);
+
+    if (startAt.getTime() < Date.now()) {
+      setError("開始時間不能早於現在");
+      setLoading(false);
+      return;
+    }
+
+    if (endAt.getTime() <= startAt.getTime()) {
+      setError("結束時間必須晚於開始時間");
+      setLoading(false);
+      return;
+    }
+
     const res = await fetch(`/api/clubs/${clubId}/sessions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -64,7 +79,8 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
       return;
     }
 
-    router.push(`/sessions/${data.id}`);
+    onCancel?.();
+    router.replace(`/clubs/${clubSlug}?tab=sessions`);
     router.refresh();
   }
 

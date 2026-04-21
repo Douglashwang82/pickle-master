@@ -86,7 +86,7 @@ export default async function ClubDetailPage({ params, searchParams }: Params) {
     .select("*")
     .eq("club_id", club.id)
     .in("status", ["published", "full"])
-    .gte("scheduled_start_at", new Date().toISOString())
+    .gte("scheduled_end_at", new Date().toISOString())
     .order("scheduled_start_at", { ascending: true });
 
   const sessionIds = (sessions ?? []).map((s) => s.id);
