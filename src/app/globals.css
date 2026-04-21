@@ -99,6 +99,16 @@
   to   { transform: translateX(100%); }
 }
 
+@keyframes drift-soft {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(16px, -18px, 0) scale(1.06); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.08); }
+}
+
 @layer utilities {
   .animate-float {
     animation: float-slow 9s ease-in-out infinite;
@@ -125,6 +135,12 @@
     pointer-events: none;
     animation: shimmer-sweep 1.4s ease-in-out 1.3s 1 both;
   }
+  .animate-drift {
+    animation: drift-soft 12s ease-in-out infinite;
+  }
+  .animate-glow-pulse {
+    animation: glow-pulse 8s ease-in-out infinite;
+  }
 }
 
 /* Respect reduced-motion preference */
@@ -133,7 +149,9 @@
   .animate-float-reverse,
   .animate-pop,
   .animate-court-grow,
-  .shimmer-overlay {
+  .shimmer-overlay,
+  .animate-drift,
+  .animate-glow-pulse {
     animation: none !important;
   }
 }

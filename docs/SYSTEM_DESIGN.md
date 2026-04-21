@@ -1,8 +1,8 @@
-# PickleMaster MVP System Design
+# PickleMaster System Design
 
-> Version: 1.0  
-> Date: 2026-04-02  
-> Based on: PRD v1.0
+> Version: 1.1
+> Date: 2026-04-21
+> Based on: PRD v1.1
 
 ---
 
@@ -22,12 +22,16 @@ This document translates the PRD into an MVP-ready system design for PickleMaste
 ### In Scope
 
 - multi-tenant club management for independent club leaders
-- public club discovery and club profile pages
+- public club discovery, public session discovery, club profile pages, and session detail pages
 - membership applications with approval or rejection
-- session creation, publishing, roster tracking, and cancellation
-- member join and payment flow with card payments
+- open-club joins and invite-link based onboarding
+- session creation, publishing, roster tracking, waitlist auto-promotion, and cancellation
+- member join with offline-debt payment tracking; real gateway integration remains behind the payment abstraction
 - refunds on session cancellation or participant removal
 - user authentication and profile management
+- club board posts, moderation, pinning, and lightweight reactions
+- venue and peer reviews with member reputation signals
+- searchable club discovery by keyword, district, membership type, skill level, and proximity
 - basic notifications for booking confirmation, application status, and session reminders
 - analytics events for funnel and operational health
 
@@ -35,11 +39,10 @@ This document translates the PRD into an MVP-ready system design for PickleMaste
 
 - non-pickleball sports
 - public court marketplace
-- in-app chat or social feed
+- in-app chat, public social feed, or public social graph
 - franchise or enterprise club tooling
-- waitlist automation
 - member self-service cancellation deadlines
-- LINE Pay and full English UI
+- LINE Pay, live card settlement, and full English UI
 
 ---
 
@@ -58,7 +61,7 @@ This document translates the PRD into an MVP-ready system design for PickleMaste
 
 ## 4.1 Architecture Summary
 
-PickleMaster MVP is a server-rendered web application built with Next.js and backed by Supabase. The web app serves public discovery pages, authenticated club workflows, and payment initiation. Supabase provides PostgreSQL, authentication, storage, and realtime updates. Payment authorization and refunds are delegated to a Taiwan-native gateway such as TapPay. Async side effects such as payment webhooks, refund processing, and reminder scheduling run in server-side jobs and edge functions.
+PickleMaster MVP is a server-rendered web application built with Next.js and backed by Supabase. The web app serves public discovery pages, authenticated club workflows, roster management, offline-debt payment tracking, reviews, and club board coordination. Supabase provides PostgreSQL, authentication, storage, realtime updates, PostGIS-backed proximity search, and scheduled jobs. Payment authorization and refunds are abstracted behind application code; the current MVP uses mocked/offline collection while preserving a path to TapPay or NewebPay. Async side effects such as payment/refund webhooks, waitlist promotion notifications, and reminder scheduling run in server-side jobs and API routes.
 
 ## 4.2 Logical Components
 
@@ -68,8 +71,8 @@ Users (Leader / Member / Newcomer)
         v
 Next.js Web App (Vercel)
         |
-        +-- Public pages: discovery, club profile
-        +-- Authenticated app: clubs, sessions, roster, profile
+        +-- Public pages: club discovery, session discovery, invite, club profile
+        +-- Authenticated app: clubs, sessions, roster, profile, reviews, board
         +-- Server actions / API routes
         |
         v
@@ -77,7 +80,10 @@ Application Backend Layer
         |
         +-- Auth orchestration
         +-- Membership and session business rules
-        +-- Payment intent creation
+        +-- Debt/payment transaction creation
+        +-- Waitlist promotion
+        +-- Review and reputation updates
+        +-- Club board moderation
         +-- Webhook verification
         +-- Notification dispatch
         |
@@ -112,7 +118,7 @@ Third Parties
 
 ## 5. Core User Flows
 
-## 5.1 Session Publish -> Join -> Pay
+## 5.1 Session Publish -> Join -> Track Payment
 
 1. Club leader creates a session.
 2. Backend validates leader permission, session fields, and club status.
@@ -120,10 +126,10 @@ Third Parties
 4. Members view upcoming sessions from the club feed.
 5. Member taps join.
 6. Backend checks membership, duplicate registration, capacity, and session status.
-7. Backend creates a short-lived booking hold plus payment intent.
-8. Client completes inline card payment using gateway tokenization.
-9. Gateway sends success webhook.
-10. Backend verifies webhook signature, marks payment `succeeded`, converts hold into confirmed registration, increments roster occupancy, emits realtime update, and sends confirmation notification.
+7. Backend creates a confirmed registration and an `initiated` payment transaction representing offline debt.
+8. Roster and leader debt progress update from database state.
+9. Leader can send a payment reminder or mark the payment transaction `succeeded`.
+10. Future gateway mode can replace steps 7-9 with payment intent creation, tokenization, webhook verification, and confirmation.
 11. Reminder job sends notifications before session start.
 
 ## 5.2 Membership Application
@@ -144,6 +150,27 @@ Third Parties
 5. Payment and registration states update on webhook or API confirmation.
 6. Participants receive cancellation and refund notifications.
 
+## 5.4 Waitlist Promotion
+
+1. A full session exposes waitlist join/leave actions to eligible members.
+2. Backend inserts one active `session_waitlist_entries` row per user/session.
+3. When a leader removes a participant, the backend checks capacity and selects the oldest active waitlist entry.
+4. The selected entry becomes `promoted`, a confirmed registration is created, a debt payment transaction is created, and the member receives an in-app notification.
+
+## 5.5 Club Board
+
+1. Active members submit board posts as `pending_review`.
+2. Leaders publish directly or approve/reject submitted posts.
+3. Published posts can be pinned and reacted to by active members.
+4. Important published announcements can fan out to in-app notifications.
+
+## 5.6 Reviews and Reputation
+
+1. After a session is completed, participants can fetch reviewable players.
+2. Peer reviews are inserted once per reviewer/reviewee/session and cannot be self-reviews.
+3. Venue reviews are inserted once per reviewer/session.
+4. Profile reputation aggregates are updated from peer reviews.
+
 ---
 
 ## 6. Domain Model
@@ -157,8 +184,15 @@ Third Parties
 - MembershipApplication
 - Session
 - SessionRegistration
+- SessionWaitlistEntry
 - PaymentTransaction
 - RefundTransaction
+- ClubInviteLink
+- ClubBoardPost
+- ClubBoardReaction
+- Venue
+- PeerReview
+- VenueReview
 - Notification
 - AuditEvent
 - AnalyticsEvent
@@ -171,6 +205,10 @@ Third Parties
 - A session has many registrations.
 - A registration has zero or one successful payment transaction.
 - A payment transaction can have zero or more refund transactions.
+- A session can have many waitlist entries; only one active waitlist entry per user/session is allowed.
+- A club can have invite links, board posts, and board reactions scoped to active members.
+- A session can optionally reference a venue.
+- A completed session can produce peer reviews and venue reviews.
 
 ## 6.3 Suggested Tables
 
@@ -192,6 +230,8 @@ Third Parties
 - bio
 - contact_preference
 - locale
+- reputation_score
+- review_count
 - created_at
 - updated_at
 
@@ -204,6 +244,11 @@ Third Parties
 - description
 - sport_type
 - cover_image_url
+- district
+- membership_type (`open`, `application`)
+- skill_levels
+- location_point
+- fts
 - rules
 - public_status
 - status
@@ -236,6 +281,7 @@ Third Parties
 
 - id
 - club_id
+- venue_id
 - title
 - notes
 - scheduled_start_at
@@ -250,6 +296,19 @@ Third Parties
 - created_at
 - updated_at
 - cancelled_at
+
+### session_waitlist_entries
+
+- id
+- session_id
+- user_id
+- status (`active`, `promoted`, `left`)
+- joined_at
+- promoted_at
+- left_at
+- promoted_registration_id
+- created_at
+- updated_at
 
 ### session_registrations
 
@@ -277,9 +336,79 @@ Third Parties
 - status (`initiated`, `authorized`, `succeeded`, `failed`, `refund_pending`, `partially_refunded`, `refunded`)
 - failure_code
 - failure_message
+- debt_notified_at
 - settled_at
 - created_at
 - updated_at
+
+### club_invite_links
+
+- id
+- club_id
+- token
+- created_by
+- expires_at
+- max_uses
+- use_count
+- is_active
+- created_at
+
+### club_board_posts
+
+- id
+- club_id
+- author_user_id
+- reviewed_by
+- kind (`announcement`, `note`)
+- title
+- body
+- status (`pending_review`, `published`, `rejected`, `archived`)
+- importance (`normal`, `important`)
+- is_pinned
+- rejection_reason
+- published_at
+- reviewed_at
+- created_at
+- updated_at
+
+### club_board_reactions
+
+- id
+- post_id
+- user_id
+- emoji
+- created_at
+
+### venues
+
+- id
+- name
+- address
+- district
+- created_at
+
+### peer_reviews
+
+- id
+- session_id
+- reviewer_user_id
+- reviewee_user_id
+- rating
+- badges
+- created_at
+
+### venue_reviews
+
+- id
+- venue_id
+- session_id
+- reviewer_user_id
+- facilities_rating
+- lighting_rating
+- floor_rating
+- transport_rating
+- comment
+- created_at
 
 ### refund_transactions
 
@@ -358,6 +487,21 @@ refund_pending -> refunded
 refund_pending -> failed
 ```
 
+## 7.5 Waitlist Entry State
+
+```text
+active -> promoted
+active -> left
+```
+
+## 7.6 Club Board Post State
+
+```text
+pending_review -> published
+pending_review -> rejected
+published -> archived
+```
+
 ---
 
 ## 8. API Design
@@ -366,7 +510,7 @@ The MVP should prefer server actions where practical for first-party UI flows, w
 
 ## 8.1 Auth and Profile
 
-- `POST /api/auth/callback`
+- `GET /api/auth/callback`
 - `GET /api/me`
 - `PATCH /api/me/profile`
 
@@ -378,6 +522,13 @@ The MVP should prefer server actions where practical for first-party UI flows, w
 - `PATCH /api/clubs/:clubId`
 - `POST /api/clubs/:clubId/dissolve`
 - `GET /api/clubs/:clubId/members`
+- `GET /api/clubs/:clubId/analytics`
+- `POST /api/clubs/:clubId/announce`
+- `GET /api/clubs/:clubId/invite`
+- `POST /api/clubs/:clubId/invite`
+- `DELETE /api/clubs/:clubId/invite`
+- `GET /api/invite/:token`
+- `POST /api/invite/:token/join`
 
 ## 8.3 Membership Applications
 
@@ -385,6 +536,7 @@ The MVP should prefer server actions where practical for first-party UI flows, w
 - `GET /api/clubs/:clubId/applications`
 - `POST /api/clubs/:clubId/applications/:applicationId/approve`
 - `POST /api/clubs/:clubId/applications/:applicationId/reject`
+- `DELETE /api/clubs/:clubId/applications/:applicationId`
 
 ## 8.4 Sessions
 
@@ -394,6 +546,12 @@ The MVP should prefer server actions where practical for first-party UI flows, w
 - `POST /api/sessions/:sessionId/cancel`
 - `GET /api/sessions/:sessionId/roster`
 - `POST /api/sessions/:sessionId/remove-participant`
+- `POST /api/sessions/:sessionId/waitlist`
+- `DELETE /api/sessions/:sessionId/waitlist`
+- `POST /api/sessions/:sessionId/notify-payment`
+- `POST /api/sessions/:sessionId/mark-debt-paid`
+- `GET /api/sessions/:sessionId/reviewable-players`
+- `POST /api/sessions/:sessionId/peer-reviews`
 
 ## 8.5 Payments and Booking
 
@@ -408,6 +566,29 @@ The MVP should prefer server actions where practical for first-party UI flows, w
 - `POST /api/refunds/webhook`
   - processes refund result callbacks when supported by gateway
 
+## 8.6 Club Board
+
+- `GET /api/clubs/:clubId/board`
+- `POST /api/clubs/:clubId/board`
+- `POST /api/clubs/:clubId/board/:postId/review`
+- `POST /api/clubs/:clubId/board/:postId/pin`
+- `POST /api/clubs/:clubId/board/:postId/reactions`
+
+## 8.7 Venues and Reviews
+
+- `GET /api/venues`
+- `GET /api/venues/:venueId`
+- `GET /api/venues/:venueId/reviews`
+- `POST /api/venues/:venueId/reviews`
+
+## 8.8 Notifications and Cron
+
+- `GET /api/me/notifications`
+- `PATCH /api/me/notifications`
+- `GET /api/cron/expire-holds`
+- `GET /api/cron/close-sessions`
+- `GET /api/cron/send-reminders`
+
 ---
 
 ## 9. Concurrency and Consistency Design
@@ -421,11 +602,17 @@ Recommended approach:
 1. Lock the target session row in the database.
 2. Count current confirmed registrations.
 3. Reject if capacity is reached.
-4. Create a short-lived `payment_pending` registration hold.
-5. On payment success, convert hold to `confirmed`.
-6. Expire unpaid holds with a scheduled cleanup job.
+4. Current MVP: create a `confirmed` registration and an `initiated` payment transaction in one write path.
+5. Future gateway mode: create a short-lived `payment_pending` registration hold and convert it to `confirmed` on payment success.
+6. Expire unpaid holds with a scheduled cleanup job when gateway mode is enabled.
 
 This is simpler and safer than trying to reserve capacity entirely in memory or in the client.
+
+## 9.1a Waitlist Ordering
+
+- Enforce one active waitlist row per session/user with a partial unique index.
+- Promote by `joined_at asc` inside the same participant-removal workflow that reopens capacity.
+- Mark the waitlist row `promoted` and store `promoted_registration_id` so retries are idempotent.
 
 ## 9.2 Realtime Roster Updates
 
@@ -456,6 +643,9 @@ This is simpler and safer than trying to reserve capacity entirely in memory or 
 - Club leaders can manage only clubs they own or lead.
 - Members can view only club-private data for clubs they belong to.
 - Public discovery and club pages expose only explicitly public fields.
+- Club board posts are readable by active club members, leaders, and their authors while pending.
+- Invite links are managed by leaders; public token resolution is validated through API logic for active, non-expired, non-exhausted links.
+- Peer and venue reviews are insert-only for authenticated users and constrained by uniqueness/self-review database rules.
 
 ## 10.3 Payment Security
 
@@ -463,6 +653,7 @@ This is simpler and safer than trying to reserve capacity entirely in memory or 
 - Client uses gateway SDK to tokenize payment details.
 - Backend stores only gateway references and masked metadata if needed.
 - Webhook endpoints verify signatures and source authenticity.
+- In current offline-debt mode, payment state changes are leader-driven application actions, and `debt_notified_at` records reminder follow-up.
 
 ## 10.4 Data Protection
 
@@ -492,8 +683,12 @@ This is simpler and safer than trying to reserve capacity entirely in memory or 
 - session published
 - session booking confirmed
 - payment failed
+- payment reminder sent
+- payment marked paid
 - session cancelled
 - participant removed
+- waitlist promoted
+- board post published
 - reminder before session start
 - club dissolved
 
@@ -523,6 +718,11 @@ Capture the PRD events as first-class analytics events:
 - `membership_approved`
 - `signup_completed`
 - `profile_completed`
+- `waitlist_joined`
+- `waitlist_promoted`
+- `board_post_submitted`
+- `board_post_published`
+- `board_reaction_added`
 
 ## 12.2 Operational Metrics
 
@@ -582,14 +782,26 @@ Sensitive fields must be redacted.
 Recommended indexes:
 
 - `clubs(slug)` unique
+- `clubs(district)` partial for public active discovery
+- `clubs(membership_type)` partial for public active discovery
+- `clubs(fts)` GIN for keyword search
+- `clubs(skill_levels)` GIN for skill filtering
+- `clubs(location_point)` GIST for PostGIS proximity sorting/filtering
 - `club_memberships(club_id, user_id)` unique
 - `membership_applications(club_id, user_id, status)`
 - `sessions(club_id, scheduled_start_at)`
 - `sessions(status, scheduled_start_at)`
 - `session_registrations(session_id, user_id)` unique
 - `session_registrations(session_id, status)`
+- `session_waitlist_entries(session_id, user_id)` partial unique where status is `active`
+- `session_waitlist_entries(session_id, status, joined_at)`
 - `payment_transactions(registration_id)` unique
 - `payment_transactions(gateway_payment_id)` unique
+- `club_invite_links(token)` unique
+- `club_board_posts(club_id, status, created_at desc)`
+- `club_board_reactions(post_id)`
+- `peer_reviews(reviewee_user_id)`
+- `venue_reviews(venue_id)`
 - `notifications(user_id, status, send_at)`
 
 ---
@@ -601,6 +813,8 @@ Recommended indexes:
 - expire unpaid booking holds
 - auto-close sessions after scheduled end + 2 hours
 - send session reminders
+- promote waitlist entries during participant removal when capacity reopens
+- queue notifications for waitlist promotions and important board announcements
 - retry failed refunds
 - reconcile payment settlement status if gateway requires polling
 
@@ -662,12 +876,15 @@ If realtime is degraded, the app should fall back to manual refresh while preser
 - session CRUD for leaders
 - session feed for members
 - realtime roster updates
+- waitlist join/leave and auto-promotion
 
 ### Slice 4: Payments
 
 - join flow
-- payment intent creation
-- payment success and failure handling
+- offline-debt payment transaction creation
+- leader payment reminders and mark-paid workflow
+- future payment intent creation
+- future payment success and failure handling
 - transaction history
 
 ### Slice 5: Operational Reliability
@@ -676,6 +893,15 @@ If realtime is degraded, the app should fall back to manual refresh while preser
 - reminders
 - club dissolution workflow
 - analytics and alerting baseline
+
+### Slice 6: Growth and Trust
+
+- invite links
+- public session browsing
+- club board
+- venue reviews
+- peer reputation
+- searchable skill/location discovery
 
 ## 17.2 Recommended Build Order
 
@@ -702,9 +928,9 @@ If realtime is degraded, the app should fall back to manual refresh while preser
 ## 19. Recommended MVP Decisions
 
 1. Use Supabase Auth for all login methods instead of building custom identity flows.
-2. Use a single payment provider, preferably TapPay, for v1.
+2. Keep the current payment abstraction and offline-debt MVP mode until TapPay or NewebPay is selected.
 3. Support email and in-app notifications only in MVP.
-4. Implement refund automation only for platform-triggered cases in v1.
+4. Implement refund automation only for platform-triggered cases in live gateway mode.
 5. Ship as a responsive web app only; no native mobile app.
 6. Use RLS plus service-role backend operations for privileged workflows.
 

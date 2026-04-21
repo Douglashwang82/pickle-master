@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.1] — 2026-04-19
+
+### Changed — Homepage Redesign
+
+- **Landing page direction**: redesigned the intro page into a fuller editorial-style homepage with a stronger visual hierarchy, warmer brand atmosphere, and clearer section-to-section pacing.
+- **Homepage copy**: rewrote the English and zh-TW landing-page messaging to focus on club operations, session flow, payments, and public discovery instead of generic SaaS language.
+- **Hero experience**: replaced the simple centered hero with a split-layout hero that uses the existing home photography, layered motion, and richer editorial framing.
+- **Homepage sections**: added new proof, feature-story, audience, discovery, and closing CTA sections to turn the page into a complete marketing flow.
+- **Motion polish**: extended the intro-page animation utilities with softer ambient drift and glow effects while preserving reduced-motion behavior.
+- **Public-page consistency**: updated the public shell, club browse, session browse, session detail, and login entry surfaces so the editorial homepage direction carries through the rest of the first-click journey.
+
 ## [0.6.0] — 2026-04-18
 
 ### Added — Session Waitlist

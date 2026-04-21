@@ -1,6 +1,6 @@
 # PRD: PickleMaster
 
-> **Version:** 1.0 | **Date:** 2026-04-02 | **Status:** Draft
+> **Version:** 1.1 | **Date:** 2026-04-21 | **Status:** Implementation-aligned draft
 
 ---
 
@@ -13,17 +13,20 @@ Pickleball club leaders ("團主") in the greater Taipei area spend up to 80% of
 PickleMaster transforms casual pickleball groups into professionally managed, branded sports communities — giving club leaders a one-click SaaS toolkit to run their operations, while giving players a seamless way to discover, join, and enjoy high-quality club experiences across the Taipei metro area.
 
 ### Goals
-- **Validate the core loop:** Prove that automated payment collection and session scheduling reduce club leader admin time by ≥50% within the first demonstration club.
+- **Validate the core loop:** Prove that session scheduling plus payment tracking reduce club leader admin time by ≥50% within the first demonstration club.
 - **Achieve product-market fit:** Reach 1 active demonstration club with ≥30 recurring members and ≥80% session fill rate within Q1.
 - **Establish SaaS foundation:** Ship a multi-tenant platform that enables any club leader to create, manage, and grow a club without engineering support.
 - **Build brand equity:** Demonstrate that a branded, professionally operated club commands higher willingness-to-pay and retention than informal LINE-group-based clubs.
+
+### Current Implementation Alignment
+The live MVP has advanced beyond the original v1.0 draft in several places. This PRD now treats public browsing, searchable club discovery, offline-debt payment tracking, invite links, club board posts, waitlist auto-promotion, venue reviews, and peer reputation as part of the current product surface. Real payment gateway settlement remains a future integration behind the existing payment abstraction.
 
 ### Non-Goals
 > Non-goals are as important as goals. Without them, every meeting becomes a negotiation about scope.
 
 - **Not a general sports platform.** PickleMaster focuses exclusively on pickleball in v1. We will not support tennis, badminton, or other racket sports — even if the data model could accommodate them.
 - **Not a venue booking marketplace.** We do not aggregate or list third-party courts for independent booking. Court management exists only within the context of a club's scheduled sessions.
-- **Not a social network.** There is no feed, messaging, or content-sharing feature. Social interaction happens through club membership and session participation, not through a social graph.
+- **Not a social network.** Club board posts are limited to operational announcements and member notes inside a club. There is no public social graph, open-ended feed, or direct messaging.
 - **Not targeting enterprise or franchise operations.** v1 serves independent club leaders running 1–3 clubs. Multi-location franchise tooling is out of scope.
 - **No offline mode.** All features require an internet connection. Offline-first architecture is not a priority for an urban Taipei audience.
 
@@ -53,15 +56,15 @@ PickleMaster transforms casual pickleball groups into professionally managed, br
 ```
 Step 1: Club leader creates a new session (date, time, court, capacity, fee) → System publishes session to club activity feed
 Step 2: Member browses upcoming sessions → System shows available sessions with spots remaining and fee
-Step 3: Member taps "Join Session" → System reserves their spot and initiates payment
-Step 4: Member completes payment → System confirms booking, updates roster, and notifies club leader ✓
+Step 3: Member taps "Join Session" → System checks capacity and confirms the roster spot
+Step 4: System creates an outstanding payment record for offline collection; leader can notify or mark paid
 Step 5: Session day arrives → System sends reminder notifications to all confirmed participants
 ```
 
 **Why this flow is the core:** This is the fundamental value exchange of PickleMaster. If club leaders can't effortlessly publish sessions and members can't seamlessly join and pay, nothing else matters. Every other feature (profiles, club discovery, analytics) exists to support this loop.
 
 **High-risk drop-off points:**
-- **Step 3 → Step 4 (Payment):** If the payment flow is clunky, fails, or requires leaving the app, users will abandon. Payment must be frictionless and embedded.
+- **Step 3 → Step 4 (Payment):** Until a live gateway is connected, debt tracking must make unpaid balances obvious and easy for leaders to follow up.
 - **Step 1 (Session creation):** If creating a session requires more than 60 seconds or too many fields, club leaders will revert to LINE messages.
 - **Step 2 (Session discovery):** If members don't receive timely notifications about new sessions, they won't check the app and the session won't fill.
 
@@ -82,7 +85,11 @@ Step 5: Session day arrives → System sends reminder notifications to all confi
 | 11 | Member | Receive notifications when new sessions are posted or when my booking is confirmed | I never miss a session opportunity | P1 |
 | 12 | Club leader | View basic analytics (attendance rate, payment status, member growth) | I can make data-driven decisions about my club | P1 |
 | 13 | Member | Cancel my session registration before a configurable deadline | I free up my spot for someone else and get a refund if applicable | P1 |
-| 14 | Club leader | Set a waitlist for full sessions | Spots are automatically filled when someone cancels | P2 |
+| 14 | Member | Join a waitlist for full sessions | I can still get a spot when someone is removed | P0 |
+| 15 | Club leader | Generate invite links for a club | I can onboard members from LINE or direct outreach quickly | P1 |
+| 16 | Club member | Post notes or announcements to the club board | The club can coordinate without scattering updates across chat threads | P1 |
+| 17 | Member | Review venues and session peers after play | Future players can trust venue quality and member reputation | P1 |
+| 18 | Newcomer | Filter clubs by district, skill level, membership type, and proximity | I can find a club that matches my location and level | P1 |
 
 *P0 = Must-have for MVP, P1 = Important, P2 = Nice-to-have*
 
@@ -100,6 +107,8 @@ Step 5: Session day arrives → System sends reminder notifications to all confi
   - FR-03: Club leader can dissolve a club. Dissolution triggers notification to all members, cancels all future sessions, and processes any pending refunds.
   - FR-04: Each club has a unique public URL/slug for discovery.
   - FR-05: Club leader can view a member roster with join date and status (active, pending, removed).
+  - FR-05a: Club leader can configure district, membership type (open or application), supported skill levels, and an optional cover image.
+  - FR-05b: Club leader can generate, view, regenerate, and revoke invite links.
 - **Constraints & NFRs:** Club creation must complete within 3 seconds. Club data must support Traditional Chinese (zh-TW) and English (en-US) input.
 - **Acceptance Criteria:**
   - [ ] A new user can create a club and see it appear on the public discovery page within 10 seconds.
@@ -115,6 +124,8 @@ Step 5: Session day arrives → System sends reminder notifications to all confi
   - FR-09: System enforces capacity limits — once a session is full, the "Join" button is disabled.
   - FR-10: Club leader can view a real-time roster for each session (who joined, who paid, who cancelled).
   - FR-11: Club leader can remove a participant from a session (triggers refund and notification).
+  - FR-11a: When a full session has an active waitlist, eligible members can join or leave the waitlist.
+  - FR-11b: When a leader removes a participant and capacity reopens, the oldest active waitlist entry is promoted automatically.
 - **Constraints & NFRs:** Session list must load within 1 second. Roster updates must reflect within 5 seconds of a state change (join, cancel, payment).
 - **Acceptance Criteria:**
   - [ ] Creating a session with all required fields publishes it to the club's session feed.
@@ -122,19 +133,20 @@ Step 5: Session day arrives → System sends reminder notifications to all confi
   - [ ] Cancelling a session triggers refund processing for all paid participants.
   - [ ] Roster accurately reflects current join/payment status in real-time.
 
-#### Feature 3: Automated Payment Collection
+#### Feature 3: Payment Tracking and Future Automated Collection
 - **Description:** When a member joins a session, payment is collected automatically — eliminating the #1 admin burden for club leaders.
 - **Functional Requirements:**
-  - FR-12: When a member taps "Join Session," the system presents an inline payment flow.
-  - FR-13: Supported payment methods: credit/debit card (via third-party gateway). LINE Pay integration is a P1 follow-up.
-  - FR-14: Upon successful payment, the member's spot is confirmed and the club leader's dashboard updates.
-  - FR-15: Failed payments do not reserve a spot. The member sees a clear error message and can retry.
+  - MVP note: Real gateway collection is mocked/deferred. Joining confirms the roster spot immediately and creates an outstanding `initiated` payment transaction for offline collection. Leaders can see paid/unpaid status, send in-app payment reminders, and mark debts as paid.
+  - FR-12: When a member taps "Join Session," the system confirms the roster spot if eligibility and capacity checks pass.
+  - FR-13: The MVP creates a payment transaction with status `initiated` to represent offline debt.
+  - FR-14: Club leaders can see paid/unpaid status per roster member and aggregate collected/outstanding totals.
+  - FR-15: Club leaders can send an in-app payment reminder and mark a member's debt as paid.
   - FR-16: Refunds are triggered automatically on session cancellation or participant removal. Refund status is visible to both club leader and member.
   - FR-17: Platform collects a service fee (configurable, default 5%) on each transaction. Net amount is settled to club leader's designated account.
 - **Constraints & NFRs:** Payment flow must complete within 10 seconds end-to-end. PCI-DSS compliance is required — the platform must never store raw card data (use tokenization via payment gateway). All payment amounts displayed in TWD (NT$).
 - **Acceptance Criteria:**
-  - [ ] A member can join a session and complete payment without leaving the app.
-  - [ ] Failed payment does not reserve a spot; member sees an actionable error message.
+  - [ ] A member can join a session and immediately appear as confirmed with unpaid status.
+  - [ ] Club leader can notify unpaid members and mark payment as received.
   - [ ] Refund is automatically initiated when a session is cancelled by the club leader.
   - [ ] Club leader can see transaction history with amounts, fees, and settlement status.
 
@@ -161,11 +173,31 @@ Step 5: Session day arrives → System sends reminder notifications to all confi
   - FR-26: Club leader receives notification of new applications and can approve or reject them.
   - FR-27: Approved applicants become club members and gain access to the club's session feed.
   - FR-28: Rejected applicants receive a notification (no reason required).
-- **Constraints & NFRs:** Discovery page must load within 2 seconds. Search/filter is P1 (not required for MVP with <10 clubs).
+  - FR-29: Public club discovery supports keyword search, district filtering, membership-type filtering, skill-level filtering, proximity search, and sorting by newest, member count, activity, or nearest.
+  - FR-30: Public session discovery lists upcoming sessions across active clubs and routes unauthenticated users to login before gated actions.
+- **Constraints & NFRs:** Discovery page must load within 2 seconds. Search/filter queries must be paginated and backed by database indexes or RPCs.
 - **Acceptance Criteria:**
   - [ ] An unauthenticated user can view the discovery page and individual club profiles.
   - [ ] A logged-in user can apply to a club and the club leader receives the application.
   - [ ] Approved members immediately see the club's session feed.
+
+#### Feature 6: Club Board
+- **Description:** Clubs can keep lightweight operational posts close to their membership workflows.
+- **Functional Requirements:**
+  - FR-31: Active members can submit notes or announcements to a club board.
+  - FR-32: Leaders can publish directly, review member submissions, reject submissions with an optional reason, and pin important posts.
+  - FR-33: Active members can react to published posts with a constrained emoji set.
+  - FR-34: Important published announcements can create in-app notifications.
+- **Constraints & NFRs:** Board posts are club-private. Body content is limited to 1,000 characters and titles to 120 characters.
+
+#### Feature 7: Reviews, Reputation, and Venues
+- **Description:** The product captures structured trust signals after sessions without becoming a public social network.
+- **Functional Requirements:**
+  - FR-35: Completed-session participants can submit peer reviews for other eligible players.
+  - FR-36: Peer reviews update member reputation score and review count.
+  - FR-37: Members can review venues by facilities, lighting, floor, transport, and optional short comment.
+  - FR-38: Public venue pages expose aggregate venue quality signals.
+- **Constraints & NFRs:** A reviewer can review each peer once per session and cannot review themselves. A member can submit one venue review per session.
 
 ### 3.2 Edge Cases & Error Handling
 
@@ -176,7 +208,11 @@ Step 5: Session day arrives → System sends reminder notifications to all confi
 | Club leader cancels a session after members have paid | All paid members receive automatic refunds. Notification sent: "Session on [date] has been cancelled. Your refund of NT$[amount] is being processed." Refund completes within 5–7 business days. |
 | Club leader dissolves a club with future sessions | All future sessions cancelled first (triggering refunds), then all members notified, then club marked as dissolved. Dissolved clubs are hidden from discovery but data retained for 90 days. |
 | Member tries to join a session they already joined | System prevents duplicate join. Message: "You're already registered for this session." |
+| Full session has an active waitlist | Eligible members can join the waitlist. When a leader removes a participant, the oldest active waitlist entry is promoted and notified. |
 | User applies to a club they're already a member of | Application is blocked. Message: "You're already a member of this club." |
+| Invite link is expired, revoked, or exhausted | Public invite preview is blocked and authenticated join/apply action is rejected. |
+| Member submits a board post | Leaders can approve, reject, or pin. Authors can see their own pending/rejected submissions. |
+| User tries to review themselves or duplicate a review | Review is rejected by validation and database constraints. |
 | Club leader removes themselves from their own club | Not allowed. Club leader must transfer ownership or dissolve the club. |
 | Session time has passed but club leader never marked it complete | System auto-closes sessions 2 hours after scheduled end time. |
 | Empty state: Club has no upcoming sessions | Member sees: "No upcoming sessions yet. Stay tuned — your club leader will post new sessions soon!" |
@@ -199,14 +235,19 @@ Step 5: Session day arrives → System sends reminder notifications to all confi
 | `membership_approved` | Club leader approves application | `club_id`, `user_id`, `time_to_approve_hours` | Track onboarding speed |
 | `signup_completed` | New user finishes registration | `user_id`, `method` (email/google/line), `duration_seconds` | Measure activation funnel |
 | `profile_completed` | User fills in all profile fields | `user_id`, `skill_level`, `has_photo` | Track profile completeness |
+| `board_post_submitted` | Member submits a board post | `club_id`, `user_id`, `kind`, `importance` | Measure club board usage |
+| `board_post_published` | Leader publishes or approves a post | `club_id`, `post_id`, `kind`, `importance` | Track operational communication |
+| `board_reaction_added` | Member reacts to a board post | `club_id`, `post_id`, `emoji` | Measure engagement quality |
+| `waitlist_joined` | Member joins a session waitlist | `session_id`, `user_id`, `position` | Measure unmet demand |
+| `waitlist_promoted` | Waitlisted member receives a spot | `session_id`, `user_id`, `wait_minutes` | Track waitlist effectiveness |
 
 ### 3.4 Post-MVP Features (P1/P2)
+The current implementation has already pulled waitlist auto-promotion, searchable skill/location discovery, basic club analytics, and the internal club board into the MVP surface. The remaining roadmap should focus on replacing offline-debt mode with real gateway settlement and adding deeper automation.
+
 - **LINE Pay integration:** Add LINE Pay as a payment method alongside credit cards — P1
 - **Push notifications:** Real-time push for new sessions, booking confirmations, and reminders — P1
 - **Session cancellation by member:** Members can cancel before a configurable deadline with automatic refund — P1
-- **Club analytics dashboard:** Attendance trends, revenue summary, member growth over time — P1
-- **Waitlist management:** Auto-promote from waitlist when a spot opens — P2
-- **Skill-level matching:** Recommend sessions or clubs based on player skill level — P2
+- **Advanced analytics dashboard:** Revenue, cohorts, utilization, and member growth beyond the current basic club analytics — P1
 - **Recurring sessions:** Club leader can set up weekly/biweekly recurring sessions — P2
 - **Multi-language UI:** Full English UI for expat players — P2
 - **In-app chat per session:** Lightweight chat for session-specific coordination — P2
@@ -220,7 +261,7 @@ Step 5: Session day arrives → System sends reminder notifications to all confi
 |-------------|--------|
 | Page load time (first contentful paint) | < 2s on 4G connection |
 | API response time (p95) | < 500ms |
-| Payment flow end-to-end | < 10s |
+| Join + payment-record creation | < 10s |
 | Real-time roster update | < 5s after state change |
 | Concurrent users (MVP) | Support 500 simultaneous |
 

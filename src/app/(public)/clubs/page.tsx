@@ -2,10 +2,11 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import ClubCard from "@/components/clubs/ClubCard";
 import ClubFilterBar from "@/components/clubs/ClubFilterBar";
 import ClubMapLoader from "@/components/clubs/ClubMapLoader";
-import { Plus } from "lucide-react";
+import { ArrowRight, Compass, Plus } from "lucide-react";
 import type { ClubWithDiscovery } from "@/types/domain";
 import { PublicClubsQuerySchema } from "@/lib/validations/clubs";
 
@@ -115,37 +116,59 @@ export default async function PublicClubsPage(props: {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 relative">
-      {/* Decorative background */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-3xl -z-10 pointer-events-none" />
-
-      {/* Page header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-border/40 pb-6 gap-4">
-        <div className="space-y-3">
-          <div className="inline-block px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-accent text-accent-foreground shadow-sm">
-            社團目錄
+    <div className="relative space-y-8 animate-in fade-in duration-500">
+      <section className="relative overflow-hidden rounded-[2.2rem] border border-border/70 bg-card/85 px-6 py-8 shadow-[0_30px_110px_-60px_rgba(16,42,31,0.5)] backdrop-blur-sm md:px-8 md:py-10">
+        <div className="pointer-events-none absolute right-[-5rem] top-[-4rem] h-56 w-56 rounded-full bg-accent/15 blur-3xl" />
+        <div className="pointer-events-none absolute left-[-6rem] bottom-[-5rem] h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl space-y-4">
+            <div className="inline-flex items-center rounded-full bg-accent px-4 py-1.5 text-[0.7rem] font-black uppercase tracking-[0.22em] text-accent-foreground shadow-sm">
+              社團目錄
+            </div>
+            <h1 className="text-4xl font-black tracking-tight text-foreground md:text-5xl lg:text-6xl">
+              用更清楚的節奏，找到你的球友圈。
+            </h1>
+            <p className="max-w-xl text-base leading-8 text-muted-foreground md:text-lg">
+              瀏覽公開社團、比較加入方式與活動密度，先看見氛圍與標準，再決定哪個社群最適合你。
+            </p>
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">探索社團</h1>
-          <p className="text-muted-foreground text-lg max-w-xl">找到您的球友圈，一起上場。加入現有社團或創建您自己的社團。</p>
+
+          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+            <Card className="rounded-[1.5rem] border-border/70 bg-background/80 shadow-none">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Compass className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-primary/70">探索狀態</p>
+                  <p className="text-sm font-semibold text-foreground">{total > 0 ? `目前共有 ${total} 個公開社團` : "開始找下一個固定球團"}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Button asChild className="h-auto rounded-full px-6 py-4 font-bold shadow-sm md:w-auto w-full group">
+              <Link href="/clubs/new">
+                <Plus className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:rotate-90" />
+                創建社團
+              </Link>
+            </Button>
+          </div>
         </div>
-        <Button asChild className="rounded-full font-bold shadow-sm md:w-auto w-full group py-6 px-6">
-          <Link href="/clubs/new">
-            <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-            創建社團
-          </Link>
-        </Button>
-      </div>
+      </section>
 
-      {/* Filter bar (needs useSearchParams → Suspense boundary) */}
-      <Suspense fallback={<div className="h-10 bg-secondary/50 animate-pulse rounded-xl" />}>
-        <ClubFilterBar view={view} />
-      </Suspense>
+      <section className="rounded-[2rem] border border-border/70 bg-background/80 p-4 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)] backdrop-blur-sm md:p-5">
+        <Suspense fallback={<div className="h-12 rounded-2xl bg-secondary/50 animate-pulse" />}>
+          <ClubFilterBar view={view} />
+        </Suspense>
+      </section>
 
-      {/* Results count */}
       {total > 0 && (
-        <p className="text-sm text-muted-foreground">
-          共 {total} 個社團
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-muted-foreground">共 {total} 個社團</p>
+          <Link href="/sessions" className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary/80">
+            也看看近期場次
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       )}
 
       {/* Map view */}
@@ -167,7 +190,7 @@ export default async function PublicClubsPage(props: {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 px-4 mt-8 bg-card rounded-3xl border border-dashed border-border/60">
+            <div className="mt-8 rounded-[2rem] border border-dashed border-border/60 bg-card/90 px-4 py-20 text-center shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
               <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Plus className="h-8 w-8 text-primary" />
               </div>
@@ -184,21 +207,21 @@ export default async function PublicClubsPage(props: {
       {view === "list" && totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-4">
           {page > 1 ? (
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="rounded-full">
               <Link href={pageUrl(page - 1)}>← 上一頁</Link>
             </Button>
           ) : (
-            <Button variant="outline" size="sm" disabled>← 上一頁</Button>
+            <Button variant="outline" size="sm" className="rounded-full" disabled>← 上一頁</Button>
           )}
           <span className="text-sm text-muted-foreground">
             第 {page} / {totalPages} 頁
           </span>
           {page < totalPages ? (
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="rounded-full">
               <Link href={pageUrl(page + 1)}>下一頁 →</Link>
             </Button>
           ) : (
-            <Button variant="outline" size="sm" disabled>下一頁 →</Button>
+            <Button variant="outline" size="sm" className="rounded-full" disabled>下一頁 →</Button>
           )}
         </div>
       )}

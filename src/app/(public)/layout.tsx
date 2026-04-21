@@ -22,53 +22,57 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Top navigation */}
-      <header className="px-6 md:px-12 py-5 flex items-center justify-between border-b border-border/40 bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <Link
-          href="/"
-          className="text-2xl font-black tracking-tighter text-primary flex items-center gap-2"
-        >
-          <div className="w-3 h-3 rounded-full bg-accent" />
-          PickleMaster
-        </Link>
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(circle_at_top_left,_rgba(38,112,88,0.14),_transparent_40%),radial-gradient(circle_at_top_right,_rgba(243,222,77,0.18),_transparent_34%)]" />
+      <div className="pointer-events-none absolute left-[-10rem] top-24 -z-10 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute right-[-8rem] top-40 -z-10 h-80 w-80 rounded-full bg-accent/15 blur-3xl" />
 
-        <nav className="flex items-center gap-4">
-          <LanguageToggle className="hidden sm:flex mr-2" />
-          <Link href="/sessions">
-            <Button variant="ghost" className="text-primary font-medium hover:bg-secondary hidden sm:inline-flex">
-              {t("nav.browseSessions")}
-            </Button>
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/75 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-12">
+          <Link href="/" className="flex items-center gap-3 text-primary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-foreground shadow-sm">
+              PM
+            </span>
+            <span className="text-xl font-black tracking-tight md:text-2xl">PickleMaster</span>
           </Link>
-          <Link href="/clubs">
-            <Button variant="ghost" className="text-primary font-medium hover:bg-secondary hidden sm:inline-flex">
-              {t("nav.findClubs")}
-            </Button>
-          </Link>
-          {user ? (
-            <Link href="/dashboard">
-              <Button className="font-semibold shadow-sm rounded-full px-6">
-                {t("nav.myDashboard")}
+
+          <nav className="flex items-center gap-3 md:gap-4">
+            <LanguageToggle className="hidden sm:flex" />
+            <Link href="/sessions">
+              <Button variant="ghost" className="hidden font-semibold text-primary hover:bg-secondary sm:inline-flex">
+                {t("nav.browseSessions")}
               </Button>
             </Link>
-          ) : (
-            <>
-              <Link href="/login">
-                <Button variant="ghost" className="text-primary font-medium hover:bg-secondary">
-                  {t("nav.signIn")}
+            <Link href="/clubs">
+              <Button variant="ghost" className="hidden font-semibold text-primary hover:bg-secondary sm:inline-flex">
+                {t("nav.findClubs")}
+              </Button>
+            </Link>
+            {user ? (
+              <Link href="/dashboard">
+                <Button className="rounded-full px-5 font-semibold shadow-sm md:px-6">
+                  {t("nav.myDashboard")}
                 </Button>
               </Link>
-              <Link href="/login">
-                <Button className="font-semibold shadow-sm rounded-full px-6">
-                  {t("nav.getStarted")}
-                </Button>
-              </Link>
-            </>
-          )}
-        </nav>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" className="font-semibold text-primary hover:bg-secondary">
+                    {t("nav.signIn")}
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button className="rounded-full px-5 font-semibold shadow-sm md:px-6">
+                    {t("nav.getStarted")}
+                  </Button>
+                </Link>
+              </>
+            )}
+          </nav>
+        </div>
       </header>
 
-      <main className="flex-1 px-4 md:px-8 lg:px-12 py-8 max-w-screen-xl mx-auto w-full">
+      <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-8 md:px-8 md:py-10 lg:px-12 lg:py-12">
         {children}
       </main>
     </div>

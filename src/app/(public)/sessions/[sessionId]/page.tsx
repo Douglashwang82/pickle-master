@@ -5,8 +5,9 @@ import { supabaseAdmin } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import { MapPin, Users, Calendar, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Users } from "lucide-react";
 import RosterList from "@/components/sessions/RosterList";
 import JoinButton from "@/components/sessions/JoinButton";
 import CancelSessionButton from "@/components/sessions/CancelSessionButton";
@@ -107,84 +108,96 @@ export default async function SessionDetailPage({ params }: Params) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       {/* Back to club link */}
       <Link
         href={`/clubs/${club.slug}`}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
         {club.name}
       </Link>
 
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{session.title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{club.name}</p>
+      <section className="rounded-[2.2rem] border border-border/70 bg-card/90 p-6 shadow-[0_30px_100px_-62px_rgba(16,42,31,0.5)] backdrop-blur-sm md:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-2xl space-y-4">
+            <div className="inline-flex items-center rounded-full bg-accent px-4 py-1.5 text-[0.7rem] font-black uppercase tracking-[0.22em] text-accent-foreground shadow-sm">
+              場次詳情
+            </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">{session.title}</h1>
+              <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-primary/70">{club.name}</p>
+            </div>
+            <div className="grid gap-3 text-sm md:grid-cols-2">
+              <div className="flex items-start gap-3 rounded-2xl bg-background/80 px-4 py-4 text-muted-foreground">
+                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  {format(new Date(session.scheduled_start_at), "EEEE, MMMM d · h:mm a")}
+                  {" – "}
+                  {format(new Date(session.scheduled_end_at), "h:mm a")}
+                </span>
+              </div>
+              <div className="flex items-start gap-3 rounded-2xl bg-background/80 px-4 py-4 text-muted-foreground">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>{session.location_name}</span>
+              </div>
+              <div className="flex items-start gap-3 rounded-2xl bg-background/80 px-4 py-4 text-muted-foreground">
+                <Users className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  {confirmedCount}/{session.capacity} 人已確認
+                  {availableSpots > 0 && ` · 剩餘 ${availableSpots} 個名額`}
+                </span>
+              </div>
+              <div className="rounded-2xl bg-primary px-4 py-4 text-primary-foreground">
+                <p className="text-[0.65rem] font-black uppercase tracking-[0.18em] text-primary-foreground/70">費用</p>
+                <p className="mt-1 text-lg font-black">{session.fee_twd > 0 ? `NT$${session.fee_twd}` : "免費加入"}</p>
+              </div>
+            </div>
+          </div>
+          <Badge
+            variant={
+              session.status === "cancelled"
+                ? "destructive"
+                : session.status === "full"
+                ? "secondary"
+                : "default"
+            }
+            className="w-fit rounded-full capitalize px-4 py-2 text-xs font-black uppercase tracking-[0.16em]"
+          >
+            {session.status}
+          </Badge>
         </div>
-        <Badge
-          variant={
-            session.status === "cancelled"
-              ? "destructive"
-              : session.status === "full"
-              ? "secondary"
-              : "default"
-          }
-          className="capitalize"
-        >
-          {session.status}
-        </Badge>
-      </div>
-
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          <span>
-            {format(new Date(session.scheduled_start_at), "EEEE, MMMM d · h:mm a")}
-            {" – "}
-            {format(new Date(session.scheduled_end_at), "h:mm a")}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <MapPin className="h-4 w-4" />
-          <span>{session.location_name}</span>
-        </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Users className="h-4 w-4" />
-          <span>
-            {confirmedCount}/{session.capacity} 人已確認
-            {availableSpots > 0 && ` · 剩餘 ${availableSpots} 個名額`}
-          </span>
-        </div>
-        {session.fee_twd > 0 && (
-          <p className="font-semibold text-foreground">NT${session.fee_twd}</p>
-        )}
-      </div>
+      </section>
 
       {session.notes && (
-        <div>
-          <p className="text-sm text-muted-foreground whitespace-pre-line">{session.notes}</p>
-        </div>
+        <Card className="rounded-[1.8rem] border-border/70 bg-background/85 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
+          <CardContent className="p-6">
+            <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">{session.notes}</p>
+          </CardContent>
+        </Card>
       )}
 
       {/* Payment collection progress bar (leader only) */}
       {isLeader && debtStats && (
-        <>
-          <Separator />
+        <Card className="rounded-[1.8rem] border-border/70 bg-background/85 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
+          <CardContent className="space-y-5 p-6">
+            <div>
+              <p className="text-[0.7rem] font-black uppercase tracking-[0.2em] text-primary/70">收款進度</p>
+            </div>
           <DebtProgressBar
             paidCount={debtStats.paidCount}
             totalCount={debtStats.totalCount}
             totalAmountTwd={debtStats.totalAmountTwd}
             paidAmountTwd={debtStats.paidAmountTwd}
           />
-        </>
+          </CardContent>
+        </Card>
       )}
-
-      <Separator />
 
       {/* Actions */}
       {session.status !== "cancelled" && (
-        <div className="flex flex-wrap gap-3">
+        <Card className="rounded-[1.8rem] border-border/70 bg-background/85 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
+          <CardContent className="flex flex-wrap gap-3 p-6">
           {/* Guest: show login-to-join button */}
           {!isAuthenticated && session.status !== "auto_closed" && session.status !== "completed" && (
             <JoinButton
@@ -226,33 +239,35 @@ export default async function SessionDetailPage({ params }: Params) {
           {isLeader && (session.status === "published" || session.status === "full") && (
             <CancelSessionButton sessionId={sessionId} />
           )}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Roster — visible to members only */}
       {isMember ? (
-        <>
-          <Separator />
+        <Card className="rounded-[1.8rem] border-border/70 bg-background/85 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
+          <CardContent className="p-6">
           <RosterList sessionId={sessionId} isLeader={isLeader} />
-        </>
+          </CardContent>
+        </Card>
       ) : (
-        <>
-          <Separator />
-          <div className="text-sm text-muted-foreground py-4 text-center">
+        <Card className="rounded-[1.8rem] border-border/70 bg-background/85 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
             成為社團成員後即可查看報名名單。
-          </div>
-        </>
+          </CardContent>
+        </Card>
       )}
 
       {(session.status === "completed" || session.status === "auto_closed") && isMember && !isLeader && (
-        <>
-          <Separator />
+        <Card className="rounded-[1.8rem] border-border/70 bg-background/85 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
+          <CardContent className="p-6">
           <ReviewSection
             sessionId={sessionId}
             venueId={null}
             venueName={null}
           />
-        </>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
