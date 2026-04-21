@@ -1,7 +1,11 @@
 import { supabaseAdmin } from "@/lib/db";
+import { guardDevRoute } from "@/lib/utils/dev-route";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const guarded = guardDevRoute(request);
+  if (guarded) return guarded;
+
   const { searchParams } = new URL(request.url);
   const reset = searchParams.get("reset") === "true";
 

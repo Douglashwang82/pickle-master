@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/db";
 import { getClubBoardData, queueImportantBoardNotifications } from "@/lib/board";
 import { trackEvent } from "@/lib/analytics";
 import { CreateBoardPostSchema } from "@/lib/validations/board";
-import { ok, fail } from "@/lib/utils/api";
+import { ok, fail, parseJsonBody } from "@/lib/utils/api";
 
 type Params = { params: Promise<{ clubId: string }> };
 
@@ -31,7 +31,9 @@ export async function POST(request: Request, { params }: Params) {
   const memberGuard = await requireClubMember(clubId, auth.appUserId);
   if (memberGuard) return memberGuard;
 
-  const body: unknown = await request.json().catch(() => ({}));
+  const { body, error: jsonError } = await parseJsonBody(request);
+  if (jsonError) return jsonError;
+
   const parsed = CreateBoardPostSchema.safeParse(body);
   if (!parsed.success) {
     return fail("Validation error", "VALIDATION_ERROR", 400, parsed.error.flatten());

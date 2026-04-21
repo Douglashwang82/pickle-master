@@ -19,6 +19,26 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ sessionId: string }> };
 
+type SessionClub = {
+  id: string;
+  slug: string;
+  name: string;
+  owner_user_id: string;
+};
+
+type PublicSession = {
+  id: string;
+  title: string;
+  status: string;
+  capacity: number;
+  fee_twd: number;
+  scheduled_start_at: string;
+  scheduled_end_at: string;
+  location_name: string;
+  notes: string | null;
+  clubs: unknown;
+};
+
 export default async function SessionDetailPage({ params }: Params) {
   const { sessionId } = await params;
   const supabase = await createClient();
@@ -32,7 +52,8 @@ export default async function SessionDetailPage({ params }: Params) {
 
   if (!session) notFound();
 
-  const club = session.clubs as { id: string; slug: string; name: string; owner_user_id: string } | null;
+  const sessionDetails = session as unknown as PublicSession;
+  const club = sessionDetails.clubs as unknown as SessionClub | null;
   if (!club) notFound();
 
   const isAuthenticated = !!user;
@@ -67,7 +88,7 @@ export default async function SessionDetailPage({ params }: Params) {
     .eq("status", "confirmed");
 
   const confirmedCount = count ?? 0;
-  const availableSpots = session.capacity - confirmedCount;
+  const availableSpots = sessionDetails.capacity - confirmedCount;
 
   // Check if current user is already registered
   let myReg: { id: string; status: string } | null = null;
@@ -89,7 +110,7 @@ export default async function SessionDetailPage({ params }: Params) {
 
   // Fetch payment stats for leaders
   let debtStats: { paidCount: number; totalCount: number; totalAmountTwd: number; paidAmountTwd: number } | null = null;
-  if (isLeader && session.fee_twd > 0) {
+  if (isLeader && sessionDetails.fee_twd > 0) {
     const { data: payments } = await supabaseAdmin
       .from("payment_transactions")
       .select("status, amount_twd")
@@ -125,54 +146,54 @@ export default async function SessionDetailPage({ params }: Params) {
               場次詳情
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">{session.title}</h1>
+              <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">{sessionDetails.title}</h1>
               <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-primary/70">{club.name}</p>
             </div>
             <div className="grid gap-3 text-sm md:grid-cols-2">
               <div className="flex items-start gap-3 rounded-2xl bg-background/80 px-4 py-4 text-muted-foreground">
                 <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span>
-                  {format(new Date(session.scheduled_start_at), "EEEE, MMMM d · h:mm a")}
+                  {format(new Date(sessionDetails.scheduled_start_at), "EEEE, MMMM d · h:mm a")}
                   {" – "}
-                  {format(new Date(session.scheduled_end_at), "h:mm a")}
+                  {format(new Date(sessionDetails.scheduled_end_at), "h:mm a")}
                 </span>
               </div>
               <div className="flex items-start gap-3 rounded-2xl bg-background/80 px-4 py-4 text-muted-foreground">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span>{session.location_name}</span>
+                <span>{sessionDetails.location_name}</span>
               </div>
               <div className="flex items-start gap-3 rounded-2xl bg-background/80 px-4 py-4 text-muted-foreground">
                 <Users className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span>
-                  {confirmedCount}/{session.capacity} 人已確認
+                  {confirmedCount}/{sessionDetails.capacity} 人已確認
                   {availableSpots > 0 && ` · 剩餘 ${availableSpots} 個名額`}
                 </span>
               </div>
               <div className="rounded-2xl bg-primary px-4 py-4 text-primary-foreground">
                 <p className="text-[0.65rem] font-black uppercase tracking-[0.18em] text-primary-foreground/70">費用</p>
-                <p className="mt-1 text-lg font-black">{session.fee_twd > 0 ? `NT$${session.fee_twd}` : "免費加入"}</p>
+                <p className="mt-1 text-lg font-black">{sessionDetails.fee_twd > 0 ? `NT$${sessionDetails.fee_twd}` : "免費加入"}</p>
               </div>
             </div>
           </div>
           <Badge
             variant={
-              session.status === "cancelled"
+              sessionDetails.status === "cancelled"
                 ? "destructive"
-                : session.status === "full"
+                : sessionDetails.status === "full"
                 ? "secondary"
                 : "default"
             }
             className="w-fit rounded-full capitalize px-4 py-2 text-xs font-black uppercase tracking-[0.16em]"
           >
-            {session.status}
+            {sessionDetails.status}
           </Badge>
         </div>
       </section>
 
-      {session.notes && (
+      {sessionDetails.notes && (
         <Card className="rounded-[1.8rem] border-border/70 bg-background/85 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
           <CardContent className="p-6">
-            <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">{session.notes}</p>
+            <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">{sessionDetails.notes}</p>
           </CardContent>
         </Card>
       )}
@@ -195,21 +216,21 @@ export default async function SessionDetailPage({ params }: Params) {
       )}
 
       {/* Actions */}
-      {session.status !== "cancelled" && (
+      {sessionDetails.status !== "cancelled" && (
         <Card className="rounded-[1.8rem] border-border/70 bg-background/85 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
           <CardContent className="flex flex-wrap gap-3 p-6">
           {/* Guest: show login-to-join button */}
-          {!isAuthenticated && session.status !== "auto_closed" && session.status !== "completed" && (
+          {!isAuthenticated && sessionDetails.status !== "auto_closed" && sessionDetails.status !== "completed" && (
             <JoinButton
               sessionId={sessionId}
-              fee={session.fee_twd}
+              fee={sessionDetails.fee_twd}
               isFull={availableSpots <= 0}
               isAuthenticated={false}
             />
           )}
 
           {/* Authenticated non-member: prompt to join the club first */}
-          {isAuthenticated && !isMember && session.status !== "auto_closed" && session.status !== "completed" && (
+          {isAuthenticated && !isMember && sessionDetails.status !== "auto_closed" && sessionDetails.status !== "completed" && (
             <div className="flex items-center gap-3">
               <p className="text-sm text-muted-foreground">您需要先成為社團成員才能報名場次。</p>
               <Button asChild variant="outline">
@@ -219,10 +240,10 @@ export default async function SessionDetailPage({ params }: Params) {
           )}
 
           {/* Member: show normal join/registered state */}
-          {isMember && !myReg && session.status !== "auto_closed" && session.status !== "completed" && (
+          {isMember && !myReg && sessionDetails.status !== "auto_closed" && sessionDetails.status !== "completed" && (
             <JoinButton
               sessionId={sessionId}
-              fee={session.fee_twd}
+              fee={sessionDetails.fee_twd}
               isFull={availableSpots <= 0}
               isAuthenticated={true}
               waitlistPosition={waitlistPosition}
@@ -236,7 +257,7 @@ export default async function SessionDetailPage({ params }: Params) {
               {myReg.status === "confirmed" ? "您已報名" : "付款待確認"}
             </Badge>
           )}
-          {isLeader && (session.status === "published" || session.status === "full") && (
+          {isLeader && (sessionDetails.status === "published" || sessionDetails.status === "full") && (
             <CancelSessionButton sessionId={sessionId} />
           )}
           </CardContent>
@@ -258,7 +279,7 @@ export default async function SessionDetailPage({ params }: Params) {
         </Card>
       )}
 
-      {(session.status === "completed" || session.status === "auto_closed") && isMember && !isLeader && (
+      {(sessionDetails.status === "completed" || sessionDetails.status === "auto_closed") && isMember && !isLeader && (
         <Card className="rounded-[1.8rem] border-border/70 bg-background/85 shadow-[0_24px_80px_-60px_rgba(16,42,31,0.45)]">
           <CardContent className="p-6">
           <ReviewSection

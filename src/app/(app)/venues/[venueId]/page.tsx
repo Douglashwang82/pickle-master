@@ -9,6 +9,19 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ venueId: string }> };
 
+type VenueWithRatings = {
+  id: string;
+  name: string;
+  address: string | null;
+  district: string | null;
+  venue_reviews?: {
+    facilities_rating: number;
+    lighting_rating: number;
+    floor_rating: number;
+    transport_rating: number;
+  }[];
+};
+
 async function getVenueDetails(venueId: string) {
   const { data: venue } = await supabaseAdmin
     .from("venues" as any)
@@ -20,12 +33,8 @@ async function getVenueDetails(venueId: string) {
 
   if (!venue) return null;
 
-  const reviews = venue.venue_reviews as {
-    facilities_rating: number;
-    lighting_rating: number;
-    floor_rating: number;
-    transport_rating: number;
-  }[];
+  const typedVenue = venue as unknown as VenueWithRatings;
+  const reviews = typedVenue.venue_reviews ?? [];
 
   const count = reviews.length;
   const overall =
@@ -43,7 +52,7 @@ async function getVenueDetails(venueId: string) {
       : null;
 
   return {
-    ...venue,
+    ...typedVenue,
     avg_rating: overall !== null ? Math.round(overall * 10) / 10 : null,
     review_count: count,
   };
@@ -74,13 +83,14 @@ async function getVenueReviews(venueId: string) {
 
 async function getEligibleSessionToReview(venueId: string, userId: string) {
   // Find a completed session at this venue that the user attended and hasn't reviewed
-  const { data: sessions } = await supabaseAdmin
+  const { data: sessionsData } = await supabaseAdmin
     .from("sessions" as any)
     .select("id")
     .eq("venue_id", venueId)
     .in("status", ["completed", "auto_closed"])
     .order("start_time", { ascending: false });
 
+  const sessions = (sessionsData ?? []) as unknown as { id: string }[];
   if (!sessions || sessions.length === 0) return null;
 
   for (const session of sessions) {

@@ -1,9 +1,10 @@
 import { requireAuth, requireClubMember, isNextResponse } from "@/lib/utils/auth-guard";
 import { supabaseAdmin } from "@/lib/db";
-import { ok, fail } from "@/lib/utils/api";
+import { ok, fail, parseJsonBody } from "@/lib/utils/api";
 import { JoinSessionSchema } from "@/lib/validations/payments";
 import { trackEvent } from "@/lib/analytics";
 import { createConfirmedRegistrationWithDebt } from "@/lib/session-registration";
+import type { SessionStatus } from "@/types/domain";
 
 type Params = { params: Promise<{ sessionId: string }> };
 
@@ -14,7 +15,9 @@ export async function POST(request: Request, { params }: Params) {
   const { sessionId } = await params;
 
   // Validate request body
-  const body: unknown = await request.json().catch(() => ({}));
+  const { body, error: jsonError } = await parseJsonBody(request);
+  if (jsonError) return jsonError;
+
   const parsed = JoinSessionSchema.safeParse(body);
   if (!parsed.success) {
     return fail("Validation error", "VALIDATION_ERROR", 400, parsed.error.flatten());
@@ -74,14 +77,29 @@ export async function POST(request: Request, { params }: Params) {
       {
         id: session.id,
         club_id: session.club_id,
-        status: session.status,
+        status: session.status as SessionStatus,
         capacity: session.capacity,
         fee_twd: session.fee_twd,
       },
       auth.appUserId,
       nowStr
     );
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("SESSION_FULL")) {
+      return fail("Session is full", "SESSION_FULL", 409);
+    }
+    if (message.includes("ALREADY_REGISTERED")) {
+      return fail("Already registered for this session", "ALREADY_REGISTERED", 409);
+    }
+    if (message.includes("SESSION_NOT_JOINABLE")) {
+      return fail(
+        `Cannot join a session with status '${session.status}'`,
+        "SESSION_NOT_JOINABLE",
+        409
+      );
+    }
+
     return fail("Failed to create registration", "DB_ERROR", 500);
   }
 

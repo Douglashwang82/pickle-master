@@ -1,6 +1,6 @@
 import { requireAuth, requireClubLeader, requireClubMember, isNextResponse } from "@/lib/utils/auth-guard";
 import { supabaseAdmin } from "@/lib/db";
-import { ok, fail } from "@/lib/utils/api";
+import { ok, fail, parseJsonBody } from "@/lib/utils/api";
 import { CreateSessionSchema } from "@/lib/validations/sessions";
 import { trackEvent } from "@/lib/analytics";
 
@@ -56,7 +56,9 @@ export async function POST(request: Request, { params }: Params) {
   const guardError = await requireClubLeader(clubId, auth.appUserId);
   if (guardError) return guardError;
 
-  const body: unknown = await request.json();
+  const { body, error: jsonError } = await parseJsonBody(request);
+  if (jsonError) return jsonError;
+
   const parsed = CreateSessionSchema.safeParse(body);
   if (!parsed.success) {
     return fail("Validation error", "VALIDATION_ERROR", 400, parsed.error.flatten());
@@ -73,11 +75,13 @@ export async function POST(request: Request, { params }: Params) {
     return fail("Invalid venue selected", "VALIDATION_ERROR", 400);
   }
 
+  const selectedVenue = venue as unknown as { name: string };
+
   const { data: session, error } = await supabaseAdmin
     .from("sessions")
     .insert({
       ...parsed.data,
-      location_name: venue.name,
+      location_name: selectedVenue.name,
       club_id: clubId,
       created_by: auth.appUserId,
       status: "published",

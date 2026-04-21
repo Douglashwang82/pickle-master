@@ -1,6 +1,6 @@
 import { requireAuth, requireClubLeader, isNextResponse } from "@/lib/utils/auth-guard";
 import { supabaseAdmin } from "@/lib/db";
-import { ok, fail } from "@/lib/utils/api";
+import { ok, fail, parseJsonBody } from "@/lib/utils/api";
 import { z } from "zod";
 
 const AnnounceSchema = z.object({
@@ -18,7 +18,9 @@ export async function POST(request: Request, { params }: Params) {
   const guardError = await requireClubLeader(clubId, auth.appUserId);
   if (guardError) return guardError;
 
-  const body: unknown = await request.json().catch(() => ({}));
+  const { body, error: jsonError } = await parseJsonBody(request);
+  if (jsonError) return jsonError;
+
   const parsed = AnnounceSchema.safeParse(body);
   if (!parsed.success) {
     return fail("Validation error", "VALIDATION_ERROR", 400, parsed.error.flatten());
