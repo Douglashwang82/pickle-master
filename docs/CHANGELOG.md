@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Session creation now returns leaders to the club Sessions tab and refreshes the club detail data so newly-created sessions appear immediately.
+- Club session lists now show in-progress sessions until their end time, while session creation blocks start times in the past.
 - Authenticated users who open the intro page at `/` are now redirected to `/clubs`.
 - Club detail navigation now shows an immediate loading state and skips leader-only venue data for non-leaders.
 - Added a global route loading state so navigations across the app show feedback immediately.

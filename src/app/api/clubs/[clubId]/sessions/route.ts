@@ -20,7 +20,7 @@ export async function GET(_req: Request, { params }: Params) {
     .select("*")
     .eq("club_id", clubId)
     .in("status", ["published", "full"])
-    .gte("scheduled_start_at", new Date().toISOString())
+    .gte("scheduled_end_at", new Date().toISOString())
     .order("scheduled_start_at", { ascending: true });
 
   if (error) return fail("Failed to fetch sessions", "DB_ERROR", 500);
@@ -62,6 +62,18 @@ export async function POST(request: Request, { params }: Params) {
   const parsed = CreateSessionSchema.safeParse(body);
   if (!parsed.success) {
     return fail("Validation error", "VALIDATION_ERROR", 400, parsed.error.flatten());
+  }
+
+  const now = Date.now();
+  const startAt = new Date(parsed.data.scheduled_start_at).getTime();
+  const endAt = new Date(parsed.data.scheduled_end_at).getTime();
+
+  if (startAt < now) {
+    return fail("Session start time cannot be in the past", "VALIDATION_ERROR", 400);
+  }
+
+  if (endAt <= startAt) {
+    return fail("Session end time must be after the start time", "VALIDATION_ERROR", 400);
   }
 
   // Fetch venue to get its name as the legacy location_name fallback
