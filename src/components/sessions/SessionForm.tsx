@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import SessionImageUpload from "@/components/sessions/SessionImageUpload";
 
 type Props = {
   clubId: string;
@@ -32,6 +33,7 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
     duration_minutes: 90,
     capacity: 10,
     fee_twd: 0,
+    image_url: null as string | null,
     notes: "",
   });
   const [loading, setLoading] = useState(false);
@@ -102,6 +104,15 @@ export default function SessionForm({ clubId, clubSlug, venues, onCancel }: Prop
               onChange={(e) => set("title", e.target.value)}
               placeholder="週一休閒賽"
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Event image</Label>
+            <SessionImageUpload
+              currentUrl={form.image_url}
+              onUpload={(url) => set("image_url", url)}
+              onRemove={() => set("image_url", null)}
             />
           </div>
 

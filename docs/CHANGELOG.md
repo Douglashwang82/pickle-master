@@ -2,8 +2,18 @@
 
 ## Unreleased
 
+### Added
+
+- Added optional session event image uploads for session creators, including Supabase Storage support and image display on session cards, public browse cards, and session detail pages.
+
 ### Fixed
 
+- Refreshed the dev seed data in `supabase/seed.sql` and `/api/dev/seed-all` so mock users, clubs, sessions, applications, debt-backed registrations, waitlist entries, and related demo records match the current implementation.
+- Club map view now uses a localized vector basemap so streets and place labels can be controlled instead of relying on baked-in raster text.
+- Club map view now includes a lightweight curated POI label layer for recognizable landmarks and sports venues.
+- Club map POI labels now use Traditional Chinese names to match the product language.
+- Club map now overlays key city and district tags in Traditional Chinese so broader place labels read consistently with the app.
+- Club map pins now keep their position correctly while zooming because the custom pin transform no longer overrides MapLibre marker positioning.
 - Session creation now returns leaders to the club Sessions tab and refreshes the club detail data so newly-created sessions appear immediately.
 - Club session lists now show in-progress sessions until their end time, while session creation blocks start times in the past.
 - Authenticated users who open the intro page at `/` are now redirected to `/clubs`.
