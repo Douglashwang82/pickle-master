@@ -11,6 +11,7 @@ type CommonRow = Record<string, unknown> & {
 	description: string | null;
 	rules: string | null;
 	cover_image_url: string | null;
+	image_url: string | null;
 	sport_type: string;
 	public_status: string;
 	owner_user_id: string;

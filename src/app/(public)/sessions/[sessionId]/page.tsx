@@ -35,6 +35,7 @@ type PublicSession = {
   scheduled_start_at: string;
   scheduled_end_at: string;
   location_name: string;
+  image_url: string | null;
   notes: string | null;
   clubs: unknown;
 };
@@ -139,7 +140,17 @@ export default async function SessionDetailPage({ params }: Params) {
         {club.name}
       </Link>
 
-      <section className="rounded-[2.2rem] border border-border/70 bg-card/90 p-6 shadow-[0_30px_100px_-62px_rgba(16,42,31,0.5)] backdrop-blur-sm md:p-8">
+      <section className="overflow-hidden rounded-[2.2rem] border border-border/70 bg-card/90 shadow-[0_30px_100px_-62px_rgba(16,42,31,0.5)] backdrop-blur-sm">
+        {sessionDetails.image_url && (
+          <div className="aspect-[16/6] w-full bg-muted">
+            <img
+              src={sessionDetails.image_url}
+              alt={sessionDetails.title}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        )}
+        <div className="p-6 md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-2xl space-y-4">
             <div className="inline-flex items-center rounded-full bg-accent px-4 py-1.5 text-[0.7rem] font-black uppercase tracking-[0.22em] text-accent-foreground shadow-sm">
@@ -187,6 +198,7 @@ export default async function SessionDetailPage({ params }: Params) {
           >
             {sessionDetails.status}
           </Badge>
+        </div>
         </div>
       </section>
 

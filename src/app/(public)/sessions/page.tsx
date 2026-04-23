@@ -23,6 +23,7 @@ type PublicSession = {
   scheduled_start_at: string;
   scheduled_end_at: string;
   location_name: string;
+  image_url: string | null;
   capacity: number;
   fee_twd: number;
   status: string;
@@ -47,7 +48,7 @@ async function fetchSessions(sp: SearchParams): Promise<{
     .from("sessions")
     .select(`
       id, title, scheduled_start_at, scheduled_end_at,
-      location_name, capacity, fee_twd, status,
+      location_name, image_url, capacity, fee_twd, status,
       clubs!inner(id, name, slug, status)
     `)
     .in("status", ["published", "full"])
@@ -67,6 +68,7 @@ async function fetchSessions(sp: SearchParams): Promise<{
       scheduled_start_at: string;
       scheduled_end_at: string;
       location_name: string;
+      image_url: string | null;
       capacity: number;
       fee_twd: number;
       status: string;
@@ -108,6 +110,7 @@ async function fetchSessions(sp: SearchParams): Promise<{
     scheduled_start_at: s.scheduled_start_at,
     scheduled_end_at: s.scheduled_end_at,
     location_name: s.location_name,
+    image_url: s.image_url,
     capacity: s.capacity,
     fee_twd: s.fee_twd,
     status: s.status,
@@ -190,7 +193,16 @@ export default async function PublicSessionsPage(props: {
             const isFull = session.available_spots <= 0;
             return (
               <Link key={session.id} href={`/sessions/${session.id}`}>
-                <Card className="h-full cursor-pointer rounded-[1.7rem] border-border/70 bg-card/90 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-[0_24px_80px_-52px_rgba(16,42,31,0.45)]">
+                <Card className="h-full cursor-pointer overflow-hidden rounded-[1.7rem] border-border/70 bg-card/90 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-[0_24px_80px_-52px_rgba(16,42,31,0.45)]">
+                  {session.image_url && (
+                    <div className="aspect-[16/8] w-full bg-muted">
+                      <img
+                        src={session.image_url}
+                        alt={session.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-bold leading-tight line-clamp-2 text-lg">{session.title}</h3>
