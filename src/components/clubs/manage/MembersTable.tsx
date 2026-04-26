@@ -13,7 +13,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTWD } from "@/lib/charts/tokens";
