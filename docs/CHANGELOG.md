@@ -4,6 +4,12 @@
 
 ### Added
 
+- Added a dedicated club leader management dashboard at `/clubs/[slug]/manage` with a sidebar navigation for Overview / Sessions / Members / Settings. Leaders are linked into it via a "管理後台" CTA on the club detail header.
+- Overview page surfaces 4 KPI cards with sparklines plus visual analytics: a 6-month revenue bar chart with average reference line, fill-rate line chart, member-growth area chart, fee-tier donut, top-sessions horizontal bar chart, and a 7×24 attendance heatmap.
+- Sessions management page supports a list / month-calendar dual view (powered by react-day-picker) with capacity dot indicators per day, clicking a day opens a Sheet with that day's sessions; toolbar offers status filters (upcoming / past / cancelled / all).
+- Members management page offers a sortable, searchable data table (skill, role, joined-at, 90-day attendance, total paid, last active) plus a collapsible pending-applications panel with batch approve/reject.
+- New analytics API endpoints: `GET /api/clubs/[clubId]/analytics/timeseries` (revenue / fill_rate / members), `GET /api/clubs/[clubId]/analytics/heatmap`, `GET /api/clubs/[clubId]/analytics/breakdown`, plus `POST /api/clubs/[clubId]/applications/batch` for batch application review. The original `GET /api/clubs/[clubId]/analytics` endpoint is preserved for backwards compatibility.
+- Installed shadcn-compatible UI primitives written in-house: `table`, `calendar`, `chart`, `checkbox`, `command`, `tooltip`, `collapsible`, `toggle-group`, `toggle`. Added `recharts`, `react-day-picker`, `cmdk` and Radix UI primitives as runtime dependencies.
 - Added optional session event image uploads for session creators, including Supabase Storage support and image display on session cards, public browse cards, and session detail pages.
 - Redesigned `/dashboard` into a fuller home view with quick stats, created-club and joined-club sections, richer empty states, and upcoming confirmed sessions grouped into a dedicated panel.
 
