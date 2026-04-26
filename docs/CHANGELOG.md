@@ -5,9 +5,12 @@
 ### Added
 
 - Added optional session event image uploads for session creators, including Supabase Storage support and image display on session cards, public browse cards, and session detail pages.
+- Redesigned `/dashboard` into a fuller home view with quick stats, created-club and joined-club sections, richer empty states, and upcoming confirmed sessions grouped into a dedicated panel.
 
 ### Fixed
 
+- Restyled the public `/sessions` search bar so its input and action button match the `/clubs` browse filter treatment.
+- Expanded the public `/sessions` browse controls to include club-style filters, sorting, and a list/map view toggle with a district-based session map.
 - Refreshed the dev seed data in `supabase/seed.sql` and `/api/dev/seed-all` so mock users, clubs, sessions, applications, debt-backed registrations, waitlist entries, and related demo records match the current implementation.
 - Club map view now uses a localized vector basemap so streets and place labels can be controlled instead of relying on baked-in raster text.
 - Club map view now includes a lightweight curated POI label layer for recognizable landmarks and sports venues.

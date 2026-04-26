@@ -41,6 +41,23 @@ export type SessionWithSpots = Session & {
   available_spots: number;
 };
 
+export type PublicSession = {
+  id: string;
+  title: string;
+  scheduled_start_at: string;
+  scheduled_end_at: string;
+  location_name: string;
+  image_url: string | null;
+  capacity: number;
+  fee_twd: number;
+  status: string;
+  confirmed_count: number;
+  available_spots: number;
+  club_name: string;
+  club_slug: string;
+  club_district: string | null;
+};
+
 export type RegistrationWithProfile = SessionRegistration & {
   profile: Pick<Profile, "user_id" | "display_name" | "photo_url" | "skill_level">;
 };
