@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus } from "lucide-react";
+import Link from "next/link";
+import { Plus, LayoutDashboard } from "lucide-react";
 import ClubBoardSection from "@/components/clubs/ClubBoardSection";
 import SessionCard from "@/components/sessions/SessionCard";
 import SessionForm from "@/components/sessions/SessionForm";
@@ -125,6 +126,14 @@ export default function ClubDetailTabs({
             <span className="text-sm text-muted-foreground">{memberCount} 位成員</span>
           </div>
         </div>
+        {isLeader && (
+          <Button asChild variant="outline" size="sm" className="shrink-0">
+            <Link href={`/clubs/${club.slug}/manage/overview`}>
+              <LayoutDashboard className="h-4 w-4 mr-1.5" />
+              管理後台
+            </Link>
+          </Button>
+        )}
       </div>
 
       {isMember && boardData && (
