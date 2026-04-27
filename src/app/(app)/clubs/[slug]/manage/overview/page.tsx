@@ -9,27 +9,27 @@ const chartSkeleton = <Skeleton className="h-64 w-full rounded-2xl" />;
 
 const RevenueTrendChart = nextDynamic(
   () => import("@/components/clubs/manage/charts/RevenueTrendChart"),
-  { ssr: false, loading: () => chartSkeleton }
+  { loading: () => chartSkeleton }
 );
 const FillRateChart = nextDynamic(
   () => import("@/components/clubs/manage/charts/FillRateChart"),
-  { ssr: false, loading: () => chartSkeleton }
+  { loading: () => chartSkeleton }
 );
 const MemberGrowthChart = nextDynamic(
   () => import("@/components/clubs/manage/charts/MemberGrowthChart"),
-  { ssr: false, loading: () => chartSkeleton }
+  { loading: () => chartSkeleton }
 );
 const FeeTierDonut = nextDynamic(
   () => import("@/components/clubs/manage/charts/FeeTierDonut"),
-  { ssr: false, loading: () => chartSkeleton }
+  { loading: () => chartSkeleton }
 );
 const TopSessionsBar = nextDynamic(
   () => import("@/components/clubs/manage/charts/TopSessionsBar"),
-  { ssr: false, loading: () => chartSkeleton }
+  { loading: () => chartSkeleton }
 );
 const AttendanceHeatmap = nextDynamic(
   () => import("@/components/clubs/manage/AttendanceHeatmap"),
-  { ssr: false, loading: () => <Skeleton className="h-48 w-full rounded-2xl" /> }
+  { loading: () => <Skeleton className="h-48 w-full rounded-2xl" /> }
 );
 
 export const dynamic = "force-dynamic";
