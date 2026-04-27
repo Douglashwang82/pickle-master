@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // venue list rarely changes; cache for 5 min
 
 type VenueWithRatings = {
   id: string;

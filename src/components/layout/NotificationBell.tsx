@@ -56,6 +56,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const unreadCount = notifications.filter((n) => n.status === "pending").length;
 
@@ -67,6 +68,7 @@ export default function NotificationBell() {
         const data: unknown = await res.json();
         if (Array.isArray(data)) {
           setNotifications(data as AppNotification[]);
+          setHasFetched(true);
         }
       }
     } finally {
@@ -75,17 +77,23 @@ export default function NotificationBell() {
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    // Defer initial fetch until after first paint so it doesn't compete with page data
+    const timer = setTimeout(fetchNotifications, 2000);
+    return () => clearTimeout(timer);
   }, [fetchNotifications]);
 
   async function handleOpen(next: boolean) {
     setOpen(next);
-    if (next && unreadCount > 0) {
-      // Mark all as read optimistically
-      setNotifications((prev) =>
-        prev.map((n) => (n.status === "pending" ? { ...n, status: "sent" } : n))
-      );
-      await fetch("/api/me/notifications", { method: "PATCH" });
+    if (next) {
+      if (!hasFetched) {
+        await fetchNotifications();
+      }
+      if (unreadCount > 0) {
+        setNotifications((prev) =>
+          prev.map((n) => (n.status === "pending" ? { ...n, status: "sent" } : n))
+        );
+        await fetch("/api/me/notifications", { method: "PATCH" });
+      }
     }
   }
 

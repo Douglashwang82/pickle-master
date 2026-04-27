@@ -13,6 +13,13 @@
 - Added optional session event image uploads for session creators, including Supabase Storage support and image display on session cards, public browse cards, and session detail pages.
 - Redesigned `/dashboard` into a fuller home view with quick stats, created-club and joined-club sections, richer empty states, and upcoming confirmed sessions grouped into a dedicated panel.
 
+### Performance
+
+- Added `loading.tsx` streaming skeletons to dashboard, venues, profile, manage (all sub-routes), public sessions, and public clubs so users see instant content placeholders instead of blank screens during navigation.
+- Memoized the Supabase client in `AppShell` with `useMemo` to prevent re-creation on every route re-render.
+- Deferred the initial `NotificationBell` fetch by 2 seconds post-mount so it no longer competes with page data fetches on first load; bell also re-fetches on first open if data has not loaded yet.
+- Switched `/venues` from `force-dynamic` to `revalidate = 300` so venue list responses are cached for 5 minutes (venue data does not vary per-user).
+
 ### Fixed
 
 - Restyled the public `/sessions` search bar so its input and action button match the `/clubs` browse filter treatment.
