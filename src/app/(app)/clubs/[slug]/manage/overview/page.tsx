@@ -1,13 +1,36 @@
 import { notFound } from "next/navigation";
+import nextDynamic from "next/dynamic";
 import { supabaseAdmin } from "@/lib/db";
 import KpiCard from "@/components/clubs/manage/KpiCard";
-import RevenueTrendChart from "@/components/clubs/manage/charts/RevenueTrendChart";
-import FillRateChart from "@/components/clubs/manage/charts/FillRateChart";
-import MemberGrowthChart from "@/components/clubs/manage/charts/MemberGrowthChart";
-import FeeTierDonut from "@/components/clubs/manage/charts/FeeTierDonut";
-import TopSessionsBar from "@/components/clubs/manage/charts/TopSessionsBar";
-import AttendanceHeatmap from "@/components/clubs/manage/AttendanceHeatmap";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatCompactTWD } from "@/lib/charts/tokens";
+
+const chartSkeleton = <Skeleton className="h-64 w-full rounded-2xl" />;
+
+const RevenueTrendChart = nextDynamic(
+  () => import("@/components/clubs/manage/charts/RevenueTrendChart"),
+  { loading: () => chartSkeleton }
+);
+const FillRateChart = nextDynamic(
+  () => import("@/components/clubs/manage/charts/FillRateChart"),
+  { loading: () => chartSkeleton }
+);
+const MemberGrowthChart = nextDynamic(
+  () => import("@/components/clubs/manage/charts/MemberGrowthChart"),
+  { loading: () => chartSkeleton }
+);
+const FeeTierDonut = nextDynamic(
+  () => import("@/components/clubs/manage/charts/FeeTierDonut"),
+  { loading: () => chartSkeleton }
+);
+const TopSessionsBar = nextDynamic(
+  () => import("@/components/clubs/manage/charts/TopSessionsBar"),
+  { loading: () => chartSkeleton }
+);
+const AttendanceHeatmap = nextDynamic(
+  () => import("@/components/clubs/manage/AttendanceHeatmap"),
+  { loading: () => <Skeleton className="h-48 w-full rounded-2xl" /> }
+);
 
 export const dynamic = "force-dynamic";
 
