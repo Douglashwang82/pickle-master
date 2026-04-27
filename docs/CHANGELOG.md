@@ -19,6 +19,7 @@
 - Memoized the Supabase client in `AppShell` with `useMemo` to prevent re-creation on every route re-render.
 - Deferred the initial `NotificationBell` fetch by 2 seconds post-mount so it no longer competes with page data fetches on first load; bell also re-fetches on first open if data has not loaded yet.
 - Switched `/venues` from `force-dynamic` to `revalidate = 300` so venue list responses are cached for 5 minutes (venue data does not vary per-user).
+- Lazy-load all five Recharts chart components and `AttendanceHeatmap` in the manage overview page via `next/dynamic` with `ssr: false`; each shows a skeleton while its JS chunk loads, keeping Recharts out of the initial page bundle.
 
 ### Fixed
 
